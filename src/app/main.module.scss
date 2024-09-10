@@ -9,3 +9,65 @@
 .active {
   color: black;
 }
+
+.navItem {
+  padding: 0.25rem 0.5rem;
+  background-color: rgb(255, 255, 255);
+  color: rgb(109, 109, 109);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  &.active {
+    background-color: rgb(122, 124, 209);
+    color: white;
+  }
+
+  &:hover:not(.active) {
+    background-color: rgb(231, 231, 231);
+    color: black;
+  }
+}
+
+.card {
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid rgb(227, 227, 227);
+  &:hover {
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+    transform: rotate(5);
+    cursor: pointer;
+  }
+  transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.player-row {
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  color: black;
+  min-height: 64px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.player-row-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.player-row-strikers {
+  display: flex;
+  gap: 8px;
+  // border: 1px solid rgb(227, 227, 227);
+  background-color: rgb(239, 239, 239);
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

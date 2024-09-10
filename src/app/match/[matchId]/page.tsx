@@ -1,6 +1,7 @@
 import styles from "../../main.module.scss";
 import { db } from "@/util/db/db";
 import NavigationBar from "@/components/NavigationBar";
+import { STRIKER_IMAGES } from "@/constants/strikers";
 
 export const revalidate = 1;
 
@@ -41,6 +42,7 @@ export default async function MatchDetails({
         JOIN "Match" m ON mp."matchId" = m."id"
         WHERE mp."matchId" = $1
         AND mp."deletedAt" IS NULL
+        ORDER BY mp."teamNumber"
       )
       -- Fetch match stats and aggregate player stats
       SELECT
@@ -119,7 +121,15 @@ export default async function MatchDetails({
           {players.map((player: any, index: number) => (
             <tr key={index}>
               <td>{player.name ? player.name : "Anonymous"}</td>
-              <td>{player.striker}</td>
+              <td>
+                <img
+                  width={32}
+                  // @ts-ignore
+                  src={"/strikers/" + STRIKER_IMAGES[player.striker as string]}
+                  style={{ marginRight: "8px" }}
+                ></img>
+                {player.striker}
+              </td>
               <td>{player.teamNumber}</td>
               <td>{player.wasGoalie ? "Goalie" : "Forward"}</td>
               <td>{player.statGoals}</td>

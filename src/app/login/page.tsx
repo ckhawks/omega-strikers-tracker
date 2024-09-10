@@ -3,6 +3,8 @@
 import { useState } from "react";
 import styles from "../main.module.scss";
 import { useRouter } from "next/navigation";
+import { Button, Col, Form, Row } from "react-bootstrap";
+import NavigationBar from "@/components/NavigationBar";
 
 const LoginPage = () => {
   const [password, setPassword] = useState("");
@@ -30,16 +32,27 @@ const LoginPage = () => {
 
   return (
     <div className={styles.main}>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter password"
-        />
-        <button type="submit">Login</button>
+      <NavigationBar />
+      <h1>Login</h1>
+      <Form onSubmit={handleSubmit}>
+        <Row style={{ maxWidth: "500px" }}>
+          <Col>
+            <Form.Control
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              style={{ maxWidth: "300px" }}
+            />
+          </Col>
+          <Col>
+            <Button variant="primary" type="submit">
+              Login
+            </Button>
+          </Col>
+        </Row>
         {error && <p>{error}</p>}
-      </form>
+      </Form>
     </div>
   );
 };

@@ -1,6 +1,8 @@
 import styles from "../../main.module.scss";
 import { db } from "@/util/db/db";
 import NavigationBar from "@/components/NavigationBar";
+import { STRIKER_IMAGES } from "@/constants/strikers";
+import BackButton from "@/components/BackButton";
 
 export const revalidate = 1;
 
@@ -189,13 +191,18 @@ FROM player_match_stats mp;
   return (
     <div className={styles.main}>
       <NavigationBar />
-      <h1>{player.name}</h1>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0px" }}>
+        <BackButton to={"/players"} text={"All players"} />
+        <h1>{player.name}</h1>
+      </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         <div>
           Winrate: {player.winRate}% - {player.totalWins} W {player.totalLosses}{" "}
           L
         </div>
         <div>Matches played: {player.totalMatches}</div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         <h3>Strikers</h3>
         <div>
           <h6>Top Strikers</h6>
@@ -204,6 +211,14 @@ FROM player_match_stats mp;
               player.topStrikers.map((striker: any) => {
                 return (
                   <li key={striker.striker}>
+                    <img
+                      width={32}
+                      src={
+                        // @ts-ignore
+                        "/strikers/" + STRIKER_IMAGES[striker.striker as string]
+                      }
+                      style={{ marginRight: "8px" }}
+                    ></img>
                     {striker.striker}. Played {striker.timesPlayed} times,{" "}
                     {striker.wins} wins, {striker.winRate}% Winrate
                   </li>
@@ -218,6 +233,8 @@ FROM player_match_stats mp;
             <div>Played goalie: {playerRoleStats[0].timesPlayedGoalie}</div>
           </div>
         )}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         <h3>Maps</h3>
         <div>
           <h6>Top Maps</h6>
@@ -233,6 +250,8 @@ FROM player_match_stats mp;
               })}
           </ol>
         </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         <h3>Statistics</h3>
         {playerStats && (
           <div>

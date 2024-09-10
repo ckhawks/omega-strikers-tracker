@@ -21,3 +21,27 @@ export const STRIKERS = [
   "X",
   "Zentaro",
 ];
+
+export const STRIKER_IMAGES = {
+  AiMi: "CloseUp_Ai.Mi.png",
+  Asher: "CloseUp_Asher.png",
+  Atlas: "CloseUp_Atlas.png",
+  "Drek'ar": "CloseUp_Drek_ar.png",
+  Dubu: "CloseUp_Dubu.png",
+  Era: "CloseUp_Era.png",
+  Estelle: "CloseUp_Estelle.png",
+  Finii: "CloseUp_Finii.png",
+  Juliette: "CloseUp_Juliette.png",
+  Juno: "CloseUp_Juno.png",
+  Kai: "CloseUp_Kai.png",
+  Kazan: "CloseUp_Kazan.png",
+  Luna: "CloseUp_Luna.png",
+  Mako: "CloseUp_Mako.png",
+  Nao: "CloseUp_Nao.png",
+  Octavia: "CloseUp_Octavia.png",
+  Rasmus: "CloseUp_Rasmus.png",
+  Rune: "CloseUp_Rune.png",
+  Vyce: "CloseUp_Vyce.png",
+  X: "CloseUp_X.png",
+  Zentaro: "CloseUp_Zentaro.png",
+};

@@ -24,35 +24,54 @@ export default function NavigationBar() {
     } else {
       setIsAuthenticated(false);
     }
-  }, [pathname]);
+  }, []);
 
   return (
-    <div style={{ display: "flex", gap: "1rem" }}>
-      <Link href={"/"} className={`${pathname === "/" ? styles.active : ""}`}>
-        Matches
-      </Link>
-      <Link
-        href={"/players"}
-        className={`${pathname === "/players" ? styles.active : ""}`}
-      >
-        Players
-      </Link>
-      {isAuthenticated && (
+    <div>
+      <h4>Omega Strikers Tracker</h4>
+      <div style={{ display: "flex", gap: "1rem" }}>
         <Link
-          href={"/create"}
-          className={`${pathname === "/create" ? styles.active : ""}`}
+          href={"/"}
+          className={`${styles.navItem} ${
+            pathname === "/" ? styles.active : ""
+          }`}
         >
-          Add match
+          Matches
         </Link>
-      )}
-      {!isAuthenticated && (
         <Link
-          href={"/login"}
-          className={`${pathname === "/login" ? styles.active : ""}`}
+          href={"/players"}
+          className={`${styles.navItem} ${
+            pathname === "/players" ? styles.active : ""
+          }`}
         >
-          Login
+          Players
         </Link>
-      )}
+        {isAuthenticated && (
+          <Link
+            href={"/create"}
+            className={`${styles.navItem} ${
+              pathname === "/create" ? styles.active : ""
+            }`}
+          >
+            Add match
+          </Link>
+        )}
+        {!isAuthenticated && (
+          <Link
+            href={"/login"}
+            className={`${styles.navItem} ${
+              pathname === "/login" ? styles.active : ""
+            }`}
+          >
+            Login
+          </Link>
+        )}
+        {isAuthenticated && (
+          <Link href={"/logout"} className={`${styles.navItem} `}>
+            Logout
+          </Link>
+        )}
+      </div>
     </div>
   );
 }
