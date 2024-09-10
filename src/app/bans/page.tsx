@@ -10,7 +10,7 @@ export default async function Bans() {
         <li>Demon Dais: Finii, Mako</li>
         <li>Oni Village: Octavia</li>
         <li>Night Market: Juliette</li>
-        <li>Aimi's App: Juliette</li>
+        <li>Aimi&apos;s App: Juliette</li>
       </ul>
       <p></p>
     </div>
