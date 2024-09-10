@@ -46,6 +46,14 @@ export default function NavigationBar() {
         >
           Players
         </Link>
+        <Link
+          href={"/bans"}
+          className={`${styles.navItem} ${
+            pathname === "/bans" ? styles.active : ""
+          }`}
+        >
+          Bans
+        </Link>
         {isAuthenticated && (
           <Link
             href={"/create"}
