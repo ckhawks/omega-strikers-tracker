@@ -57,6 +57,10 @@ th {
   padding: 0.25rem;
 }
 
+tbody tr:nth-child(even) {
+  background-color: #f7f7f7;
+}
+
 h1,
 h2,
 h3,
