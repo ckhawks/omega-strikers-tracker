@@ -241,12 +241,12 @@ export default async function PlayersList() {
             );
           })}
       </div>
-      <h2>Average Stats Per Match, Combined</h2>
+      <h3>Forward & Goalie</h3>
       <table>
         <thead>
           <tr>
             <th>Player</th>
-            <th>Matches Played</th>
+            <th>Matches</th>
             <th>Avg Goals</th>
             <th>Avg Assists</th>
             <th>Avg Saves</th>
@@ -317,12 +317,12 @@ export default async function PlayersList() {
             ))}
         </tbody>
       </table>
-      <h3>Average Stats Per Match, Forward</h3>
+      <h3>Forward</h3>
       <table>
         <thead>
           <tr>
             <th>Player</th>
-            <th>Matches Played</th>
+            <th>Matches</th>
             <th>Avg Goals</th>
             <th>Avg Assists</th>
             <th>Avg Saves</th>
@@ -393,12 +393,12 @@ export default async function PlayersList() {
             ))}
         </tbody>
       </table>
-      <h3>Average Stats Per Match, Goalie</h3>
+      <h3>Goalie</h3>
       <table>
         <thead>
           <tr>
             <th>Player</th>
-            <th>Matches Played</th>
+            <th>Matches</th>
             <th>Avg Goals</th>
             <th>Avg Assists</th>
             <th>Avg Saves</th>
