@@ -6,7 +6,6 @@ The initial tool was hacked together in an evening.
 You can view the project with read-only access at [omegastrikers.stlr.cx](https://omegastrikers.stlr.cx).
 
 ## Setting up for development
-
 Clone the repo, and then install the required dependencies:
 ```bash
 git clone https://github.com/ckhawks/omega-strikers-tracker.git
