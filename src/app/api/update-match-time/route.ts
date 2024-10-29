@@ -26,6 +26,9 @@ export async function POST(request: Request, { params }: { params: any }) {
 
   console.log("body", body);
 
+  const durationInSeconds = +matchDurationMinutes * 60 + +matchDurationSeconds;
+  console.log(durationInSeconds);
+
   try {
     // Look up the match based on criteria
     const matchSearch = await db(
@@ -47,7 +50,7 @@ export async function POST(request: Request, { params }: { params: any }) {
       RETURNING *;
       `,
       [
-        matchDurationMinutes * 60 + matchDurationSeconds,
+        durationInSeconds,
         map,
         setScoreA,
         setScoreB,

@@ -10,6 +10,7 @@ export default async function Home() {
   const matches = await db(
     ` 
       SELECT * FROM "Match"
+      ORDER BY "createdAt"
     `,
     []
   );
