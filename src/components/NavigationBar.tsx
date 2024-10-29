@@ -64,6 +64,16 @@ export default function NavigationBar() {
             Add match
           </Link>
         )}
+        {isAuthenticated && (
+          <Link
+            href={"/matchtime"}
+            className={`${styles.navItem} ${
+              pathname === "/matchtime" ? styles.active : ""
+            }`}
+          >
+            Insert match time
+          </Link>
+        )}
         {!isAuthenticated && (
           <Link
             href={"/login"}

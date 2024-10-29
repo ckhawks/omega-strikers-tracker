@@ -36,7 +36,8 @@ export default async function MatchDetails({
             m."map",
             m."team1Score",
             m."team2Score",
-            m."createdAt"
+            m."createdAt",
+            m."duration"
         FROM "MatchPlayer" mp
         LEFT JOIN "Player" p ON mp."playerId" = p."id"
         JOIN "Match" m ON mp."matchId" = m."id"
@@ -61,7 +62,8 @@ export default async function MatchDetails({
         mp."map",
         mp."team1Score",
         mp."team2Score",
-        mp."createdAt"
+        mp."createdAt",
+        mp."duration"
       FROM match_players mp
     `,
     [params.matchId]
@@ -76,6 +78,8 @@ export default async function MatchDetails({
 
   const options = { year: "numeric", month: "long", day: "numeric" };
   const formattedDate = match.createdAt.toLocaleDateString("en-US", options);
+
+  console.log(match.duration);
 
   return (
     <div className={styles.main}>
@@ -96,6 +100,12 @@ export default async function MatchDetails({
         </div>
         <div>
           <strong>Team 2 Score:</strong> {match.team2Score}
+        </div>
+        <div>
+          <strong>Duration: </strong>
+          {match.duration !== 0
+            ? `${Math.floor(match.duration / 60)}:${match.duration % 60}`
+            : "Unknown"}
         </div>
       </div>
 
