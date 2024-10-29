@@ -55,6 +55,7 @@ export default async function PlayersList() {
             COALESCE(ROUND(AVG(mp."statSaves")::numeric, 2), 0) AS "averageSaves",
             COALESCE(ROUND(AVG(mp."statKnockouts")::numeric, 2), 0) AS "averageKnockouts",
             COALESCE(ROUND(AVG(mp."statDamage")::numeric, 2), 0) AS "averageDamage",
+            COALESCE(ROUND(AVG(mp."statDamage")::numeric / AVG(mp."statKnockouts")::numeric, 2), 0) as "averageDamagePerKnockout",
             COALESCE(ROUND(AVG(mp."statShots")::numeric, 2), 0) AS "averageShots",
             COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "averageRedirects",
             COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "averageOrbs"
@@ -80,6 +81,9 @@ export default async function PlayersList() {
           CASE 
             WHEN ps."averageDamage" = MAX(ps."averageDamage") OVER () THEN TRUE ELSE FALSE 
           END AS "isHighestDamage",
+          CASE 
+            WHEN ps."averageDamagePerKnockout" = MIN(ps."averageDamagePerKnockout") OVER () THEN TRUE ELSE FALSE 
+          END AS "isLowestDamagePerKnockout",
           CASE 
             WHEN ps."averageShots" = MAX(ps."averageShots") OVER () THEN TRUE ELSE FALSE 
           END AS "isHighestShots",
@@ -107,7 +111,8 @@ export default async function PlayersList() {
             ROUND(AVG(mp."statAssists")::numeric, 2) AS "averageAssists",
             ROUND(AVG(mp."statSaves")::numeric, 2) AS "averageSaves",
             ROUND(AVG(mp."statKnockouts")::numeric, 2) AS "averageKnockouts",
-            ROUND(AVG(mp."statDamage")::numeric, 2) AS "averageDamage",
+            ROUND(AVG(mp."statDamage")::numeric, 0) AS "averageDamage",
+            ROUND(AVG(mp."statDamage")::numeric / AVG(mp."statKnockouts")::numeric, 0) as "averageDamagePerKnockout",
             ROUND(AVG(mp."statShots")::numeric, 2) AS "averageShots",
             ROUND(AVG(mp."statRedirects")::numeric, 2) AS "averageRedirects",
             ROUND(AVG(mp."statOrbs")::numeric, 2) AS "averageOrbs"
@@ -127,6 +132,7 @@ export default async function PlayersList() {
             ps."averageSaves",
             ps."averageKnockouts",
             ps."averageDamage",
+            ps."averageDamagePerKnockout",
             ps."averageShots",
             ps."averageRedirects",
             ps."averageOrbs",
@@ -136,6 +142,7 @@ export default async function PlayersList() {
             CASE WHEN ps."averageSaves" = MAX(ps."averageSaves") OVER () THEN 'highest' ELSE '' END AS "isHighestSaves",
             CASE WHEN ps."averageKnockouts" = MAX(ps."averageKnockouts") OVER () THEN 'highest' ELSE '' END AS "isHighestKnockouts",
             CASE WHEN ps."averageDamage" = MAX(ps."averageDamage") OVER () THEN 'highest' ELSE '' END AS "isHighestDamage",
+            CASE WHEN ps."averageDamagePerKnockout" = MIN(ps."averageDamagePerKnockout") OVER () THEN 'lowest' ELSE '' END AS "isLowestDamagePerKnockout",
             CASE WHEN ps."averageShots" = MAX(ps."averageShots") OVER () THEN 'highest' ELSE '' END AS "isHighestShots",
             CASE WHEN ps."averageRedirects" = MAX(ps."averageRedirects") OVER () THEN 'highest' ELSE '' END AS "isHighestRedirects",
             CASE WHEN ps."averageOrbs" = MAX(ps."averageOrbs") OVER () THEN 'highest' ELSE '' END AS "isHighestOrbs"
@@ -153,6 +160,7 @@ export default async function PlayersList() {
             ps."averageSaves",
             ps."averageKnockouts",
             ps."averageDamage",
+            ps."averageDamagePerKnockout",
             ps."averageShots",
             ps."averageRedirects",
             ps."averageOrbs",
@@ -162,6 +170,7 @@ export default async function PlayersList() {
             CASE WHEN ps."averageSaves" = MAX(ps."averageSaves") OVER () THEN 'highest' ELSE '' END AS "isHighestSaves",
             CASE WHEN ps."averageKnockouts" = MAX(ps."averageKnockouts") OVER () THEN 'highest' ELSE '' END AS "isHighestKnockouts",
             CASE WHEN ps."averageDamage" = MAX(ps."averageDamage") OVER () THEN 'highest' ELSE '' END AS "isHighestDamage",
+            CASE WHEN ps."averageDamagePerKnockout" = MIN(ps."averageDamagePerKnockout") OVER () THEN 'lowest' ELSE '' END AS "isLowestDamagePerKnockout",
             CASE WHEN ps."averageShots" = MAX(ps."averageShots") OVER () THEN 'highest' ELSE '' END AS "isHighestShots",
             CASE WHEN ps."averageRedirects" = MAX(ps."averageRedirects") OVER () THEN 'highest' ELSE '' END AS "isHighestRedirects",
             CASE WHEN ps."averageOrbs" = MAX(ps."averageOrbs") OVER () THEN 'highest' ELSE '' END AS "isHighestOrbs"
@@ -171,6 +180,73 @@ export default async function PlayersList() {
       SELECT * FROM forward_stats
       UNION ALL
       SELECT * FROM goalie_stats;
+    `,
+    []
+  );
+
+  const allTimeStats = await db(
+    `
+      SELECT 
+        p."id",
+        p."name",
+        COUNT(mp."matchId") AS "totalMatches",
+        COALESCE(SUM(mp."statGoals"), 0) AS "totalGoals",
+        COALESCE(SUM(mp."statAssists"), 0) AS "totalAssists",
+        COALESCE(SUM(mp."statSaves"), 0) AS "totalSaves",
+        COALESCE(SUM(mp."statKnockouts"), 0) AS "totalKnockouts",
+        COALESCE(SUM(mp."statDamage"), 0) AS "totalDamage",
+        COALESCE(SUM(mp."statShots"), 0) AS "totalShots",
+        COALESCE(SUM(mp."statRedirects"), 0) AS "totalRedirects",
+        COALESCE(SUM(mp."statOrbs"), 0) AS "totalOrbs",
+        -- Wins, Losses, and Win Rate
+        SUM(CASE WHEN m."team1Won" = TRUE AND mp."teamNumber" = 1 THEN 1
+                 WHEN m."team1Won" = FALSE AND mp."teamNumber" = 2 THEN 1
+                 ELSE 0 END) AS "totalWins",
+        SUM(CASE WHEN m."team1Won" = TRUE AND mp."teamNumber" = 2 THEN 1
+                 WHEN m."team1Won" = FALSE AND mp."teamNumber" = 1 THEN 1
+                 ELSE 0 END) AS "totalLosses",
+        ROUND(
+          (SUM(CASE WHEN m."team1Won" = TRUE AND mp."teamNumber" = 1 THEN 1
+                    WHEN m."team1Won" = FALSE AND mp."teamNumber" = 2 THEN 1
+                    ELSE 0 END)::numeric 
+          / NULLIF(COUNT(mp."matchId"), 0)) * 100, 2
+        ) AS "winRate",
+        -- Highlight highest values
+        CASE WHEN COUNT(mp."matchId") = MAX(COUNT(mp."matchId")) OVER () THEN TRUE ELSE FALSE END AS "isHighestMatches",
+        CASE WHEN SUM(mp."statGoals") = MAX(SUM(mp."statGoals")) OVER () THEN TRUE ELSE FALSE END AS "isHighestGoals",
+        CASE WHEN SUM(mp."statAssists") = MAX(SUM(mp."statAssists")) OVER () THEN TRUE ELSE FALSE END AS "isHighestAssists",
+        CASE WHEN SUM(mp."statSaves") = MAX(SUM(mp."statSaves")) OVER () THEN TRUE ELSE FALSE END AS "isHighestSaves",
+        CASE WHEN SUM(mp."statKnockouts") = MAX(SUM(mp."statKnockouts")) OVER () THEN TRUE ELSE FALSE END AS "isHighestKnockouts",
+        CASE WHEN SUM(mp."statDamage") = MAX(SUM(mp."statDamage")) OVER () THEN TRUE ELSE FALSE END AS "isHighestDamage",
+        CASE WHEN SUM(mp."statShots") = MAX(SUM(mp."statShots")) OVER () THEN TRUE ELSE FALSE END AS "isHighestShots",
+        CASE WHEN SUM(mp."statRedirects") = MAX(SUM(mp."statRedirects")) OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirects",
+        CASE WHEN SUM(mp."statOrbs") = MAX(SUM(mp."statOrbs")) OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbs",
+        CASE WHEN SUM(CASE WHEN m."team1Won" = TRUE AND mp."teamNumber" = 1 THEN 1
+                           WHEN m."team1Won" = FALSE AND mp."teamNumber" = 2 THEN 1
+                           ELSE 0 END) = MAX(SUM(CASE WHEN m."team1Won" = TRUE AND mp."teamNumber" = 1 THEN 1
+                                                     WHEN m."team1Won" = FALSE AND mp."teamNumber" = 2 THEN 1
+                                                     ELSE 0 END)) OVER () THEN TRUE ELSE FALSE END AS "isHighestWins",
+        CASE WHEN SUM(CASE WHEN m."team1Won" = TRUE AND mp."teamNumber" = 2 THEN 1
+                           WHEN m."team1Won" = FALSE AND mp."teamNumber" = 1 THEN 1
+                           ELSE 0 END) = MAX(SUM(CASE WHEN m."team1Won" = TRUE AND mp."teamNumber" = 2 THEN 1
+                                                     WHEN m."team1Won" = FALSE AND mp."teamNumber" = 1 THEN 1
+                                                     ELSE 0 END)) OVER () THEN TRUE ELSE FALSE END AS "isHighestLosses",
+        CASE WHEN ROUND(
+          (SUM(CASE WHEN m."team1Won" = TRUE AND mp."teamNumber" = 1 THEN 1
+                    WHEN m."team1Won" = FALSE AND mp."teamNumber" = 2 THEN 1
+                    ELSE 0 END)::numeric 
+          / NULLIF(COUNT(mp."matchId"), 0)) * 100, 2
+        ) = MAX(ROUND(
+          (SUM(CASE WHEN m."team1Won" = TRUE AND mp."teamNumber" = 1 THEN 1
+                    WHEN m."team1Won" = FALSE AND mp."teamNumber" = 2 THEN 1
+                    ELSE 0 END)::numeric 
+          / NULLIF(COUNT(mp."matchId"), 0)) * 100, 2)) OVER () THEN TRUE ELSE FALSE END AS "isHighestWinRate"
+      FROM "Player" p
+      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+      LEFT JOIN "Match" m ON mp."matchId" = m."id"
+      WHERE p."deletedAt" IS NULL
+      GROUP BY p."id", p."name"
+      ORDER BY "totalMatches" DESC;
     `,
     []
   );
@@ -252,6 +328,7 @@ export default async function PlayersList() {
             <th>Avg Saves</th>
             <th>Avg KOs</th>
             <th>Avg Damage</th>
+            <th>Avg Dmg per KO</th>
             <th>Avg Shots</th>
             <th>Avg Redirects</th>
             <th>Avg Orbs</th>
@@ -292,7 +369,17 @@ export default async function PlayersList() {
                     <td
                       className={player.isHighestDamage ? styles.highlight : ""}
                     >
-                      {player.averageDamage}
+                      {Math.round(player.averageDamage)}
+                    </td>
+                    <td
+                      className={
+                        player.isLowestDamagePerKnockout ? styles.highlight : ""
+                      }
+                    >
+                      {/* {isFinite(player.averageDamagePerKnockout)
+                        ? player.averageDamagePerKnockout
+                        : "N/A"} */}
+                      {Math.round(player.averageDamagePerKnockout)}
                     </td>
                     <td
                       className={player.isHighestShots ? styles.highlight : ""}
@@ -328,6 +415,7 @@ export default async function PlayersList() {
             <th>Avg Saves</th>
             <th>Avg KOs</th>
             <th>Avg Damage</th>
+            <th>Avg Dmg per KO</th>
             <th>Avg Shots</th>
             <th>Avg Redirects</th>
             <th>Avg Orbs</th>
@@ -368,7 +456,14 @@ export default async function PlayersList() {
                     <td
                       className={player.isHighestDamage ? styles.highlight : ""}
                     >
-                      {player.averageDamage}
+                      {Math.round(player.averageDamage)}
+                    </td>
+                    <td
+                      className={
+                        player.isLowestDamagePerKnockout ? styles.highlight : ""
+                      }
+                    >
+                      {Math.round(player.averageDamagePerKnockout)}
                     </td>
                     <td
                       className={player.isHighestShots ? styles.highlight : ""}
@@ -404,6 +499,7 @@ export default async function PlayersList() {
             <th>Avg Saves</th>
             <th>Avg KOs</th>
             <th>Avg Damage</th>
+            <th>Avg Dmg per KO</th>
             <th>Avg Shots</th>
             <th>Avg Redirects</th>
             <th>Avg Orbs</th>
@@ -444,7 +540,14 @@ export default async function PlayersList() {
                     <td
                       className={player.isHighestDamage ? styles.highlight : ""}
                     >
-                      {player.averageDamage}
+                      {Math.round(player.averageDamage)}
+                    </td>
+                    <td
+                      className={
+                        player.isLowestDamagePerKnockout ? styles.highlight : ""
+                      }
+                    >
+                      {Math.round(player.averageDamagePerKnockout)}
                     </td>
                     <td
                       className={player.isHighestShots ? styles.highlight : ""}
@@ -466,6 +569,74 @@ export default async function PlayersList() {
                   </tr>
                 )}
               </>
+            ))}
+        </tbody>
+      </table>
+      <h3>All-Time Stats</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Total Matches</th>
+            <th>Total Wins</th>
+            <th>Total Losses</th>
+            <th>Win Rate (%)</th>
+            <th>Total Goals</th>
+            <th>Total Assists</th>
+            <th>Total Saves</th>
+            <th>Total KOs</th>
+            <th>Total Damage</th>
+            <th>Total Shots</th>
+            <th>Total Redirects</th>
+            <th>Total Orbs</th>
+          </tr>
+        </thead>
+        <tbody>
+          {allTimeStats &&
+            allTimeStats.map((player, index) => (
+              <tr key={index}>
+                <td>{player.name}</td>
+                <td className={player.isHighestMatches ? styles.highlight : ""}>
+                  {player.totalMatches}
+                </td>
+                <td className={player.isHighestWins ? styles.highlight : ""}>
+                  {player.totalWins}
+                </td>
+                <td className={player.isHighestLosses ? styles.highlight : ""}>
+                  {player.totalLosses}
+                </td>
+                <td className={player.isHighestWinRate ? styles.highlight : ""}>
+                  {player.winRate}%
+                </td>
+                <td className={player.isHighestGoals ? styles.highlight : ""}>
+                  {player.totalGoals}
+                </td>
+                <td className={player.isHighestAssists ? styles.highlight : ""}>
+                  {player.totalAssists}
+                </td>
+                <td className={player.isHighestSaves ? styles.highlight : ""}>
+                  {player.totalSaves}
+                </td>
+                <td
+                  className={player.isHighestKnockouts ? styles.highlight : ""}
+                >
+                  {player.totalKnockouts}
+                </td>
+                <td className={player.isHighestDamage ? styles.highlight : ""}>
+                  {player.totalDamage}
+                </td>
+                <td className={player.isHighestShots ? styles.highlight : ""}>
+                  {player.totalShots}
+                </td>
+                <td
+                  className={player.isHighestRedirects ? styles.highlight : ""}
+                >
+                  {player.totalRedirects}
+                </td>
+                <td className={player.isHighestOrbs ? styles.highlight : ""}>
+                  {player.totalOrbs}
+                </td>
+              </tr>
             ))}
         </tbody>
       </table>

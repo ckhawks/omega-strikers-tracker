@@ -112,6 +112,7 @@ export default async function MatchDetails({
             <th>Saves</th>
             <th>KOs</th>
             <th>Damage</th>
+            <th>Dmg per KO</th>
             <th>Shots</th>
             <th>Redirects</th>
             <th>Orbs</th>
@@ -137,6 +138,11 @@ export default async function MatchDetails({
               <td>{player.statSaves}</td>
               <td>{player.statKnockouts}</td>
               <td>{player.statDamage}</td>
+              <td>
+                {isFinite(Math.round(player.statDamage / player.statKnockouts))
+                  ? Math.round(player.statDamage / player.statKnockouts)
+                  : "N/A"}
+              </td>
               <td>{player.statShots}</td>
               <td>{player.statRedirects}</td>
               <td>{player.statOrbs}</td>
