@@ -25,6 +25,9 @@ export default async function Home() {
             <div key={match.id}>
               Match {index} on {match.map} at {match.createdAt.toString()}
               <Link href={"/match/" + match.id}>View</Link>
+              {match.duration !== 0
+                ? `${Math.floor(match.duration / 60)}:${match.duration % 60}`
+                : "Unknown"}
             </div>
           );
         })}

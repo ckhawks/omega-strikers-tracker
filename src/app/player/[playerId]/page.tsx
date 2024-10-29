@@ -232,7 +232,44 @@ export default async function PlayerDetails({
       return acc;
     }, {})
   );
-  console.log(mapStrikers);
+  // console.log(mapStrikers);
+
+  const playerStatsPerMinuteResults = await db(
+    `
+      WITH player_match_stats AS (
+        -- Retrieve relevant stats per match, ensuring non-zero duration
+        SELECT
+            mp."statGoals",
+            mp."statAssists",
+            mp."statSaves",
+            mp."statKnockouts",
+            mp."statDamage",
+            mp."statShots",
+            mp."statRedirects",
+            mp."statOrbs",
+            COALESCE(m."duration", 0) AS "duration"
+        FROM "MatchPlayer" mp
+        JOIN "Match" m ON mp."matchId" = m."id"
+        WHERE mp."playerId" = $1
+        AND mp."deletedAt" IS NULL
+        AND m."duration" > 0 -- Only include matches with duration > 0
+      )
+      SELECT
+        -- Calculate each stat per minute by dividing the total stat by total minutes
+        ROUND(SUM(mp."statGoals")::numeric / NULLIF(SUM(mp."duration") / 60, 0), 2) AS "goalsPerMinute",
+        ROUND(SUM(mp."statAssists")::numeric / NULLIF(SUM(mp."duration") / 60, 0), 2) AS "assistsPerMinute",
+        ROUND(SUM(mp."statSaves")::numeric / NULLIF(SUM(mp."duration") / 60, 0), 2) AS "savesPerMinute",
+        ROUND(SUM(mp."statKnockouts")::numeric / NULLIF(SUM(mp."duration") / 60, 0), 2) AS "knockoutsPerMinute",
+        ROUND(SUM(mp."statDamage")::numeric / NULLIF(SUM(mp."duration") / 60, 0), 2) AS "damagePerMinute",
+        ROUND(SUM(mp."statShots")::numeric / NULLIF(SUM(mp."duration") / 60, 0), 2) AS "shotsPerMinute",
+        ROUND(SUM(mp."statRedirects")::numeric / NULLIF(SUM(mp."duration") / 60, 0), 2) AS "redirectsPerMinute",
+        ROUND(SUM(mp."statOrbs")::numeric / NULLIF(SUM(mp."duration") / 60, 0), 2) AS "orbsPerMinute"
+      FROM player_match_stats mp;
+    `,
+    [player.id]
+  );
+
+  const playerStatsPerMinute = playerStatsPerMinuteResults[0];
 
   const playerStats = playerStatsPerSearch[0];
 
@@ -464,6 +501,37 @@ export default async function PlayerDetails({
           </div>
         )}
       </div>
+
+      {playerStatsPerMinute && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <h3>Statistics Per Minute</h3>
+          <table>
+            <tbody>
+              <tr>
+                <th>Goals</th>
+                <th>Assists</th>
+                <th>Saves</th>
+                <th>KOs</th>
+                <th>Damage</th>
+                <th>Shots</th>
+                <th>Redirects</th>
+                <th>Orbs</th>
+              </tr>
+              <tr>
+                <td>{playerStatsPerMinute.goalsPerMinute}</td>
+                <td>{playerStatsPerMinute.assistsPerMinute}</td>
+                <td>{playerStatsPerMinute.savesPerMinute}</td>
+                <td>{playerStatsPerMinute.knockoutsPerMinute}</td>
+                <td>{Math.round(playerStatsPerMinute.damagePerMinute)}</td>
+                <td>{playerStatsPerMinute.shotsPerMinute}</td>
+                <td>{playerStatsPerMinute.redirectsPerMinute}</td>
+                <td>{playerStatsPerMinute.orbsPerMinute}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         <h3>Average Stats Per Striker</h3>
         <div>

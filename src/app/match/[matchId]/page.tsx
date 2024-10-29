@@ -103,7 +103,6 @@ export default async function MatchDetails({
         </div>
         <div>
           <strong>Duration: </strong>
-          {match.duration};
           {match.duration !== 0
             ? `${Math.floor(match.duration / 60)}:${match.duration % 60}`
             : "Unknown"}

@@ -33,10 +33,20 @@ export const insertMatch = async (formData: any) => {
     };
   }
 
+  const durationInSeconds =
+    +formData.get("matchDurationMinutes") * 60 +
+    +formData.get("matchDurationSeconds");
+
   try {
     const matchInsert = await db(
-      `INSERT INTO "Match" (map, "team1Won", "team1Score", "team2Score") VALUES ($1, $2, $3, $4) RETURNING "id"`,
-      [formData.get("arena"), scoreA > scoreB, scoreA, scoreB]
+      `INSERT INTO "Match" (map, "team1Won", "team1Score", "team2Score", "duration") VALUES ($1, $2, $3, $4, $5) RETURNING "id"`,
+      [
+        formData.get("arena"),
+        scoreA > scoreB,
+        scoreA,
+        scoreB,
+        durationInSeconds,
+      ]
     );
 
     const matchId = matchInsert[0].id; // match id for the match created

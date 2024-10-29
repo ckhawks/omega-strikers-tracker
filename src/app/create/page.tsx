@@ -277,7 +277,7 @@ export default function CreateMatch() {
     const roles2 = [player4Role, player5Role, player6Role];
 
     // Count how many players have the "goalie" role
-    const goalieCount2 = roles.filter((role) => role === "goalie").length;
+    const goalieCount2 = roles2.filter((role) => role === "goalie").length;
 
     // Check if exactly one player has the "goalie" role
     if (goalieCount2 !== 1) {
@@ -338,8 +338,21 @@ export default function CreateMatch() {
           </Form.Select>
         </Form.Group>
         <Form.Group>
+          <Form.Label>Match Duration</Form.Label>
+          <Row style={{ maxWidth: "200px" }}>
+            <Col>
+              <Form.Control type="number" name="matchDurationMinutes" />
+            </Col>
+            :
+            <Col>
+              <Form.Control type="number" name="matchDurationSeconds" />
+            </Col>
+          </Row>
+        </Form.Group>
+        <Form.Group>
           <Form.Label>Match Date</Form.Label>
           <Form.Control
+            disabled
             type="date"
             name="date"
             value={matchDate}

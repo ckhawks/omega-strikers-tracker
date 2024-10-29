@@ -7,6 +7,21 @@ import { AVATAR_IMAGES } from "@/constants/avatars";
 
 export const revalidate = 1;
 
+const formatDuration = (seconds: number) => {
+  const days = Math.floor(seconds / (24 * 3600));
+  seconds %= 24 * 3600;
+  const hours = Math.floor(seconds / 3600);
+  seconds %= 3600;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  if (days > 0) {
+    return `${days}d ${hours}h ${minutes}m ${remainingSeconds}s`;
+  } else {
+    return `${hours}h ${minutes}m ${remainingSeconds}s`;
+  }
+};
+
 export default async function PlayersList() {
   const players = await db(
     ` 
@@ -211,7 +226,9 @@ export default async function PlayersList() {
                     ELSE 0 END)::numeric 
           / NULLIF(COUNT(mp."matchId"), 0)) * 100, 2
         ) AS "winRate",
+        COALESCE(SUM(m."duration"), 0) AS "totalPlaytime", -- Total playtime in seconds
         -- Highlight highest values
+        CASE WHEN SUM(m."duration") = MAX(SUM(m."duration")) OVER () THEN TRUE ELSE FALSE END AS "isHighestPlaytime",
         CASE WHEN COUNT(mp."matchId") = MAX(COUNT(mp."matchId")) OVER () THEN TRUE ELSE FALSE END AS "isHighestMatches",
         CASE WHEN SUM(mp."statGoals") = MAX(SUM(mp."statGoals")) OVER () THEN TRUE ELSE FALSE END AS "isHighestGoals",
         CASE WHEN SUM(mp."statAssists") = MAX(SUM(mp."statAssists")) OVER () THEN TRUE ELSE FALSE END AS "isHighestAssists",
@@ -247,6 +264,56 @@ export default async function PlayersList() {
       WHERE p."deletedAt" IS NULL
       GROUP BY p."id", p."name"
       ORDER BY "totalMatches" DESC;
+    `,
+    []
+  );
+
+  const perMinuteStats = await db(
+    `
+    WITH player_playtime AS (
+      SELECT 
+          p."id",
+          p."name",
+          COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes"
+      FROM "Player" p
+      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+      LEFT JOIN "Match" m ON mp."matchId" = m."id"
+      WHERE p."deletedAt" IS NULL
+      GROUP BY p."id", p."name"
+  ),
+  per_minute_stats AS (
+      SELECT
+          p."id",
+          p."name",
+          COALESCE(SUM(mp."statGoals") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "goalsPerMinute",
+          COALESCE(SUM(mp."statAssists") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "assistsPerMinute",
+          COALESCE(SUM(mp."statSaves") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "savesPerMinute",
+          COALESCE(SUM(mp."statKnockouts") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "knockoutsPerMinute",
+          COALESCE(SUM(mp."statDamage") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "damagePerMinute",
+          COALESCE(SUM(mp."statShots") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "shotsPerMinute",
+          COALESCE(SUM(mp."statRedirects") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "redirectsPerMinute",
+          COALESCE(SUM(mp."statOrbs") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "orbsPerMinute"
+      FROM "Player" p
+      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+      LEFT JOIN player_playtime playtime ON p."id" = playtime."id"
+      WHERE p."deletedAt" IS NULL
+      GROUP BY p."id", p."name", playtime."totalPlaytimeInMinutes"
+  ),
+  highlighted_per_minute_stats AS (
+      SELECT *,
+          CASE WHEN "goalsPerMinute" = MAX("goalsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMinute",
+          CASE WHEN "assistsPerMinute" = MAX("assistsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMinute",
+          CASE WHEN "savesPerMinute" = MAX("savesPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMinute",
+          CASE WHEN "knockoutsPerMinute" = MAX("knockoutsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestKnockoutsPerMinute",
+          CASE WHEN "damagePerMinute" = MAX("damagePerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMinute",
+          CASE WHEN "shotsPerMinute" = MAX("shotsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMinute",
+          CASE WHEN "redirectsPerMinute" = MAX("redirectsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMinute",
+          CASE WHEN "orbsPerMinute" = MAX("orbsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMinute"
+      FROM per_minute_stats
+  )
+  SELECT * FROM highlighted_per_minute_stats
+  ORDER BY "goalsPerMinute" DESC;
+  
     `,
     []
   );
@@ -572,11 +639,92 @@ export default async function PlayersList() {
             ))}
         </tbody>
       </table>
+      <h3>Per-Minute Stats</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Goals/Min</th>
+            <th>Assists/Min</th>
+            <th>Saves/Min</th>
+            <th>KOs/Min</th>
+            <th>Damage/Min</th>
+            <th>Shots/Min</th>
+            <th>Redirects/Min</th>
+            <th>Orbs/Min</th>
+          </tr>
+        </thead>
+        <tbody>
+          {perMinuteStats.map((player, index) => (
+            <tr key={index}>
+              <td>{player.name}</td>
+              <td
+                className={
+                  player.isHighestGoalsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.goalsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestAssistsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.assistsPerMinute ?? 0).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestSavesPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.savesPerMinute ?? 0).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestKnockoutsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.knockoutsPerMinute ?? 0).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestDamagePerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.damagePerMinute ?? 0).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestShotsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.shotsPerMinute ?? 0).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestRedirectsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.redirectsPerMinute ?? 0).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestOrbsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.orbsPerMinute ?? 0).toFixed(2)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
       <h3>All-Time Stats</h3>
       <table>
         <thead>
           <tr>
             <th>Player</th>
+            <th>Playtime</th>
             <th>Total Matches</th>
             <th>Total Wins</th>
             <th>Total Losses</th>
@@ -596,6 +744,11 @@ export default async function PlayersList() {
             allTimeStats.map((player, index) => (
               <tr key={index}>
                 <td>{player.name}</td>
+                <td
+                  className={player.isHighestPlaytime ? styles.highlight : ""}
+                >
+                  {formatDuration(player.totalPlaytime)}
+                </td>
                 <td className={player.isHighestMatches ? styles.highlight : ""}>
                   {player.totalMatches}
                 </td>

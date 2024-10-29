@@ -24,10 +24,7 @@ export async function POST(request: Request, { params }: { params: any }) {
     statKnockouts,
   } = body;
 
-  console.log("body", body);
-
-  const durationInSeconds = +matchDurationMinutes * 60 + +matchDurationSeconds;
-  console.log(durationInSeconds);
+  const durationInSeconds = +matchDurationMinutes * 60 + +matchDurationSeconds; // this is stupid javascript moment
 
   try {
     // Look up the match based on criteria

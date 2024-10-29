@@ -1,11 +1,11 @@
 # TODO
 - DONE Damage per KO
-- Add duration tracking to matches
-- Add stat per minute tables for players
+- DONE Add duration tracking to matches
+- DONE Add stat per minute tables for players
 - DONE player page: stats per striker
 - DONE All-time tally of each stat for each player
-
-- Player page: Strikers played on each map
+- DONE remove stupid browser number controls from fields
+- DONE Player page: Strikers played on each map
 - Convert the bans page to list the strikers we lose to the most for each map
 - Statistics per role per player
 - Statistics per striker per player
