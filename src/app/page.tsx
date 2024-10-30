@@ -19,18 +19,29 @@ export default async function Home() {
     <div className={styles.main}>
       <NavigationBar />
       <h1>Match List</h1>
-      {matches &&
-        matches.map((match, index) => {
-          return (
-            <div key={match.id}>
-              Match {index} on {match.map} at {match.createdAt.toString()}
-              <Link href={"/match/" + match.id}>View</Link>
-              {match.duration !== 0
-                ? `${Math.floor(match.duration / 60)}:${match.duration % 60}`
-                : "Unknown"}
-            </div>
-          );
-        })}
+      <div>
+        {matches &&
+          matches.map((match, index) => {
+            return (
+              <div key={match.id} className={styles["match-item"]}>
+                <span>Match {index}</span>
+                <b>{match.map}</b>
+                <span>
+                  {match.team1Score} - {match.team2Score}
+                </span>
+                <span>
+                  {match.duration !== 0
+                    ? `${Math.floor(match.duration / 60)}:${
+                        match.duration % 60
+                      }`
+                    : "Unknown"}
+                </span>
+                {match.createdAt.toString()}
+                <Link href={"/match/" + match.id}>View</Link>
+              </div>
+            );
+          })}
+      </div>
     </div>
   );
 }

@@ -75,3 +75,14 @@
 .highlight {
   background-color: rgb(225, 237, 225);
 }
+
+.match-item {
+  border: 1px solid rgb(209, 209, 209);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 1rem;
+  margin: 1rem 0rem;
+}
