@@ -11,56 +11,69 @@ export default async function GlobalStats() {
   const globalMapStrikers = await db(
     `
       WITH global_player_matches AS (
-      -- Retrieve relevant data for each match, categorizing by map, striker, role, and match result
-      SELECT
-        mp."striker",
-        mp."wasGoalie",
-        m."map",
-        CASE 
-            WHEN mp."teamNumber" = 1 AND m."team1Won" = TRUE THEN 'Win'
-            WHEN mp."teamNumber" = 2 AND m."team1Won" = FALSE THEN 'Win'
-            ELSE 'Loss' 
-        END AS "matchResult"
-      FROM "MatchPlayer" mp
-      JOIN "Match" m ON mp."matchId" = m."id"
-      WHERE mp."deletedAt" IS NULL
-    ),
-    map_total_matches AS (
-      -- Calculate the total matches played on each map
+        -- Retrieve relevant data for each match, categorizing by map, striker, role, match result, and registered status
+        SELECT
+          mp."striker",
+          mp."wasGoalie",
+          m."map",
+          mp."playerId" IS NOT NULL AS "isRegistered", -- Check if playerId is non-null
+          CASE 
+              WHEN mp."teamNumber" = 1 AND m."team1Won" = TRUE THEN 'Win'
+              WHEN mp."teamNumber" = 2 AND m."team1Won" = FALSE THEN 'Win'
+              ELSE 'Loss' 
+          END AS "matchResult"
+        FROM "MatchPlayer" mp
+        JOIN "Match" m ON mp."matchId" = m."id"
+        WHERE mp."deletedAt" IS NULL
+      ),
+      map_total_matches AS (
+        -- Calculate the total matches played on each map
+        SELECT 
+          "map", 
+          COUNT(*) AS "totalMatches"
+        FROM global_player_matches
+        GROUP BY "map"
+      )
       SELECT 
-        "map", 
-        COUNT(*) AS "totalMatches"
-      FROM global_player_matches
-      GROUP BY "map"
-    )
-    SELECT 
-      gpm."map",
-      gpm."wasGoalie" AS "role",
-      gpm."striker",
-      COUNT(*) AS "matchesPlayed",
-      SUM(CASE WHEN gpm."matchResult" = 'Win' THEN 1 ELSE 0 END) AS "wins",
-      ROUND(
-        (SUM(CASE WHEN gpm."matchResult" = 'Win' THEN 1 ELSE 0 END)::numeric / NULLIF(COUNT(*), 0)) * 100, 2
-      ) AS "winRate",
-      mtm."totalMatches" -- Include total matches per map
-    FROM global_player_matches gpm
-    JOIN map_total_matches mtm ON gpm."map" = mtm."map"
-    GROUP BY gpm."map", "role", "striker", mtm."totalMatches"
-    ORDER BY gpm."map", "role", "winRate" DESC, "matchesPlayed" DESC;
-
+        gpm."map",
+        gpm."wasGoalie" AS "role",
+        gpm."striker",
+        COUNT(*) AS "matchesPlayed",
+        SUM(CASE WHEN gpm."matchResult" = 'Win' THEN 1 ELSE 0 END) AS "wins",
+        ROUND(
+          (SUM(CASE WHEN gpm."matchResult" = 'Win' THEN 1 ELSE 0 END)::numeric / NULLIF(COUNT(*), 0)) * 100, 2
+        ) AS "winRate",
+        ROUND(
+          (SUM(CASE WHEN gpm."isRegistered" = TRUE THEN 1 ELSE 0 END)::numeric / NULLIF(COUNT(*), 0)) * 100, 2
+        ) AS "friendlyRate", -- Calculate "Friendly %" as percentage of non-null playerId
+        mtm."totalMatches" -- Include total matches per map
+      FROM global_player_matches gpm
+      JOIN map_total_matches mtm ON gpm."map" = mtm."map"
+      GROUP BY gpm."map", "role", "striker", mtm."totalMatches"
+      ORDER BY gpm."map", "role", "winRate" DESC, "matchesPlayed" DESC;
     `
   );
 
+  // Process the results as before
   const globalMapStats = Object.entries(
     globalMapStrikers.reduce((acc, curr) => {
-      const { map, role, striker, matchesPlayed, wins, winRate, totalMatches } =
-        curr;
+      const {
+        map,
+        role,
+        striker,
+        matchesPlayed,
+        wins,
+        winRate,
+        friendlyRate,
+        totalMatches,
+      } = curr;
       if (!acc[map]) acc[map] = { totalMatches, Forwards: [], Goalies: [] };
       acc[map][role ? "Goalies" : "Forwards"].push({
         striker,
         matchesPlayed,
         wins,
         winRate,
+        friendlyRate, // Include friendlyRate in the data
       });
       return acc;
     }, {})
@@ -80,6 +93,7 @@ export default async function GlobalStats() {
               <th>Striker</th>
               <th>Win Rate (%)</th>
               <th>Matches Played</th>
+              <th>Friendly (%)</th>
               <th>Wins</th>
             </tr>
           </thead>
@@ -89,7 +103,10 @@ export default async function GlobalStats() {
                 <>
                   {/* Forwards */}
                   {Forwards.map(
-                    ({ striker, matchesPlayed, wins, winRate }, index) => (
+                    (
+                      { striker, matchesPlayed, wins, winRate, friendlyRate },
+                      index
+                    ) => (
                       <tr key={`${mapName}-forward-${index}`}>
                         <td>
                           {index === 0
@@ -100,7 +117,6 @@ export default async function GlobalStats() {
                         <td>
                           <img
                             width={32}
-                            // @ts-ignore
                             src={`/strikers/${STRIKER_IMAGES[striker]}`}
                             alt={striker}
                             style={{ borderRadius: "4px", marginRight: "8px" }}
@@ -109,6 +125,7 @@ export default async function GlobalStats() {
                         </td>
                         <td>{winRate}%</td>
                         <td>{matchesPlayed}</td>
+                        <td>{friendlyRate}%</td>
                         <td>{wins}</td>
                       </tr>
                     )
@@ -116,7 +133,10 @@ export default async function GlobalStats() {
 
                   {/* Goalies */}
                   {Goalies.map(
-                    ({ striker, matchesPlayed, wins, winRate }, index) => (
+                    (
+                      { striker, matchesPlayed, wins, winRate, friendlyRate },
+                      index
+                    ) => (
                       <tr key={`${mapName}-goalie-${index}`}>
                         <td>
                           {index === 0 && Forwards.length === 0
@@ -127,7 +147,6 @@ export default async function GlobalStats() {
                         <td>
                           <img
                             width={32}
-                            // @ts-ignore
                             src={`/strikers/${STRIKER_IMAGES[striker]}`}
                             alt={striker}
                             style={{ borderRadius: "4px", marginRight: "8px" }}
@@ -136,6 +155,7 @@ export default async function GlobalStats() {
                         </td>
                         <td>{winRate}%</td>
                         <td>{matchesPlayed}</td>
+                        <td>{friendlyRate}%</td>
                         <td>{wins}</td>
                       </tr>
                     )
