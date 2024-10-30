@@ -104,8 +104,20 @@ export default async function GlobalStats() {
                   {/* Forwards */}
                   {Forwards.map(
                     (
-                      { striker, matchesPlayed, wins, winRate, friendlyRate },
-                      index
+                      {
+                        striker,
+                        matchesPlayed,
+                        wins,
+                        winRate,
+                        friendlyRate,
+                      }: {
+                        striker: any;
+                        matchesPlayed: number;
+                        wins: number;
+                        winRate: number;
+                        friendlyRate: number;
+                      },
+                      index: number
                     ) => (
                       <tr key={`${mapName}-forward-${index}`}>
                         <td>
@@ -117,6 +129,7 @@ export default async function GlobalStats() {
                         <td>
                           <img
                             width={32}
+                            // @ts-ignore
                             src={`/strikers/${STRIKER_IMAGES[striker]}`}
                             alt={striker}
                             style={{ borderRadius: "4px", marginRight: "8px" }}
@@ -134,8 +147,20 @@ export default async function GlobalStats() {
                   {/* Goalies */}
                   {Goalies.map(
                     (
-                      { striker, matchesPlayed, wins, winRate, friendlyRate },
-                      index
+                      {
+                        striker,
+                        matchesPlayed,
+                        wins,
+                        winRate,
+                        friendlyRate,
+                      }: {
+                        striker: any;
+                        matchesPlayed: number;
+                        wins: number;
+                        winRate: number;
+                        friendlyRate: number;
+                      },
+                      index: number
                     ) => (
                       <tr key={`${mapName}-goalie-${index}`}>
                         <td>
@@ -147,6 +172,7 @@ export default async function GlobalStats() {
                         <td>
                           <img
                             width={32}
+                            // @ts-ignore
                             src={`/strikers/${STRIKER_IMAGES[striker]}`}
                             alt={striker}
                             style={{ borderRadius: "4px", marginRight: "8px" }}
