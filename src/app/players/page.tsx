@@ -117,91 +117,93 @@ export default async function PlayersList() {
   const playerStatsSplit = await db(
     `
       WITH player_stats AS (
-          SELECT 
-            p."id",
-            p."name",
-            mp."wasGoalie",  -- true = goalie, false = forward
-            COUNT(mp."matchId") AS "matchesPlayed",
-            ROUND(AVG(mp."statGoals")::numeric, 2) AS "averageGoals",
-            ROUND(AVG(mp."statAssists")::numeric, 2) AS "averageAssists",
-            ROUND(AVG(mp."statSaves")::numeric, 2) AS "averageSaves",
-            ROUND(AVG(mp."statKnockouts")::numeric, 2) AS "averageKnockouts",
-            ROUND(AVG(mp."statDamage")::numeric, 0) AS "averageDamage",
-            ROUND(AVG(mp."statDamage")::numeric / AVG(mp."statKnockouts")::numeric, 0) as "averageDamagePerKnockout",
-            ROUND(AVG(mp."statShots")::numeric, 2) AS "averageShots",
-            ROUND(AVG(mp."statRedirects")::numeric, 2) AS "averageRedirects",
-            ROUND(AVG(mp."statOrbs")::numeric, 2) AS "averageOrbs"
-          FROM "Player" p
-          LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
-          WHERE p."deletedAt" IS NULL
-          GROUP BY p."id", p."name", mp."wasGoalie"
-      ),
-      forward_stats AS (
-          SELECT 
-            ps."id",
-            ps."name",
-            'Forward' AS role,
-            ps."matchesPlayed",
-            ps."averageGoals",
-            ps."averageAssists",
-            ps."averageSaves",
-            ps."averageKnockouts",
-            ps."averageDamage",
-            ps."averageDamagePerKnockout",
-            ps."averageShots",
-            ps."averageRedirects",
-            ps."averageOrbs",
-            -- Add CASE for highlighting the highest stat for each column
-            CASE WHEN ps."averageGoals" = MAX(ps."averageGoals") OVER () THEN 'highest' ELSE '' END AS "isHighestGoals",
-            CASE WHEN ps."averageAssists" = MAX(ps."averageAssists") OVER () THEN 'highest' ELSE '' END AS "isHighestAssists",
-            CASE WHEN ps."averageSaves" = MAX(ps."averageSaves") OVER () THEN 'highest' ELSE '' END AS "isHighestSaves",
-            CASE WHEN ps."averageKnockouts" = MAX(ps."averageKnockouts") OVER () THEN 'highest' ELSE '' END AS "isHighestKnockouts",
-            CASE WHEN ps."averageDamage" = MAX(ps."averageDamage") OVER () THEN 'highest' ELSE '' END AS "isHighestDamage",
-            CASE WHEN ps."averageDamagePerKnockout" = MIN(ps."averageDamagePerKnockout") OVER () THEN 'lowest' ELSE '' END AS "isLowestDamagePerKnockout",
-            CASE WHEN ps."averageShots" = MAX(ps."averageShots") OVER () THEN 'highest' ELSE '' END AS "isHighestShots",
-            CASE WHEN ps."averageRedirects" = MAX(ps."averageRedirects") OVER () THEN 'highest' ELSE '' END AS "isHighestRedirects",
-            CASE WHEN ps."averageOrbs" = MAX(ps."averageOrbs") OVER () THEN 'highest' ELSE '' END AS "isHighestOrbs"
-          FROM player_stats ps
-          WHERE ps."wasGoalie" = false -- Only forward stats
-      ),
-      goalie_stats AS (
-          SELECT 
-            ps."id",
-            ps."name",
-            'Goalie' AS role,
-            ps."matchesPlayed",
-            ps."averageGoals",
-            ps."averageAssists",
-            ps."averageSaves",
-            ps."averageKnockouts",
-            ps."averageDamage",
-            ps."averageDamagePerKnockout",
-            ps."averageShots",
-            ps."averageRedirects",
-            ps."averageOrbs",
-            -- Add CASE for highlighting the highest stat for each column
-            CASE WHEN ps."averageGoals" = MAX(ps."averageGoals") OVER () THEN 'highest' ELSE '' END AS "isHighestGoals",
-            CASE WHEN ps."averageAssists" = MAX(ps."averageAssists") OVER () THEN 'highest' ELSE '' END AS "isHighestAssists",
-            CASE WHEN ps."averageSaves" = MAX(ps."averageSaves") OVER () THEN 'highest' ELSE '' END AS "isHighestSaves",
-            CASE WHEN ps."averageKnockouts" = MAX(ps."averageKnockouts") OVER () THEN 'highest' ELSE '' END AS "isHighestKnockouts",
-            CASE WHEN ps."averageDamage" = MAX(ps."averageDamage") OVER () THEN 'highest' ELSE '' END AS "isHighestDamage",
-            CASE WHEN ps."averageDamagePerKnockout" = MIN(ps."averageDamagePerKnockout") OVER () THEN 'lowest' ELSE '' END AS "isLowestDamagePerKnockout",
-            CASE WHEN ps."averageShots" = MAX(ps."averageShots") OVER () THEN 'highest' ELSE '' END AS "isHighestShots",
-            CASE WHEN ps."averageRedirects" = MAX(ps."averageRedirects") OVER () THEN 'highest' ELSE '' END AS "isHighestRedirects",
-            CASE WHEN ps."averageOrbs" = MAX(ps."averageOrbs") OVER () THEN 'highest' ELSE '' END AS "isHighestOrbs"
-          FROM player_stats ps
-          WHERE ps."wasGoalie" = true -- Only goalie stats
-      )
-      SELECT * FROM forward_stats
-      UNION ALL
-      SELECT * FROM goalie_stats;
+    SELECT
+        p."id",
+        p."name",
+        mp."wasGoalie",  -- true = goalie, false = forward
+        COUNT(mp."matchId") AS "matchesPlayed",
+        ROUND(AVG(mp."statGoals")::numeric, 2) AS "averageGoals",
+        ROUND(AVG(mp."statAssists")::numeric, 2) AS "averageAssists",
+        ROUND(AVG(mp."statSaves")::numeric, 2) AS "averageSaves",
+        ROUND(AVG(mp."statKnockouts")::numeric, 2) AS "averageKnockouts",
+        ROUND(AVG(mp."statDamage")::numeric, 0) AS "averageDamage",
+        -- Prevent division by zero by using NULLIF
+        ROUND(AVG(mp."statDamage")::numeric / NULLIF(AVG(mp."statKnockouts")::numeric, 0), 0) as "averageDamagePerKnockout",
+        ROUND(AVG(mp."statShots")::numeric, 2) AS "averageShots",
+        ROUND(AVG(mp."statRedirects")::numeric, 2) AS "averageRedirects",
+        ROUND(AVG(mp."statOrbs")::numeric, 2) AS "averageOrbs"
+    FROM "Player" p
+    LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+    WHERE p."deletedAt" IS NULL
+    GROUP BY p."id", p."name", mp."wasGoalie"
+),
+forward_stats AS (
+    SELECT
+        ps."id",
+        ps."name",
+        'Forward' AS role,
+        ps."matchesPlayed",
+        ps."averageGoals",
+        ps."averageAssists",
+        ps."averageSaves",
+        ps."averageKnockouts",
+        ps."averageDamage",
+        ps."averageDamagePerKnockout",
+        ps."averageShots",
+        ps."averageRedirects",
+        ps."averageOrbs",
+        -- Add CASE for highlighting the highest stat for each column
+        CASE WHEN ps."averageGoals" = MAX(ps."averageGoals") OVER () THEN 'highest' ELSE '' END AS "isHighestGoals",
+        CASE WHEN ps."averageAssists" = MAX(ps."averageAssists") OVER () THEN 'highest' ELSE '' END AS "isHighestAssists",
+        CASE WHEN ps."averageSaves" = MAX(ps."averageSaves") OVER () THEN 'highest' ELSE '' END AS "isHighestSaves",
+        CASE WHEN ps."averageKnockouts" = MAX(ps."averageKnockouts") OVER () THEN 'highest' ELSE '' END AS "isHighestKnockouts",
+        CASE WHEN ps."averageDamage" = MAX(ps."averageDamage") OVER () THEN 'highest' ELSE '' END AS "isHighestDamage",
+        CASE WHEN ps."averageDamagePerKnockout" = MIN(ps."averageDamagePerKnockout") OVER () THEN 'lowest' ELSE '' END AS "isLowestDamagePerKnockout",
+        CASE WHEN ps."averageShots" = MAX(ps."averageShots") OVER () THEN 'highest' ELSE '' END AS "isHighestShots",
+        CASE WHEN ps."averageRedirects" = MAX(ps."averageRedirects") OVER () THEN 'highest' ELSE '' END AS "isHighestRedirects",
+        CASE WHEN ps."averageOrbs" = MAX(ps."averageOrbs") OVER () THEN 'highest' ELSE '' END AS "isHighestOrbs"
+    FROM player_stats ps
+    WHERE ps."wasGoalie" = false -- Only forward stats
+),
+goalie_stats AS (
+    SELECT
+        ps."id",
+        ps."name",
+        'Goalie' AS role,
+        ps."matchesPlayed",
+        ps."averageGoals",
+        ps."averageAssists",
+        ps."averageSaves",
+        ps."averageKnockouts",
+        ps."averageDamage",
+        ps."averageDamagePerKnockout",
+        ps."averageShots",
+        ps."averageRedirects",
+        ps."averageOrbs",
+        -- Add CASE for highlighting the highest stat for each column
+        CASE WHEN ps."averageGoals" = MAX(ps."averageGoals") OVER () THEN 'highest' ELSE '' END AS "isHighestGoals",
+        CASE WHEN ps."averageAssists" = MAX(ps."averageAssists") OVER () THEN 'highest' ELSE '' END AS "isHighestAssists",
+        CASE WHEN ps."averageSaves" = MAX(ps."averageSaves") OVER () THEN 'highest' ELSE '' END AS "isHighestSaves",
+        CASE WHEN ps."averageKnockouts" = MAX(ps."averageKnockouts") OVER () THEN 'highest' ELSE '' END AS "isHighestKnockouts",
+        CASE WHEN ps."averageDamage" = MAX(ps."averageDamage") OVER () THEN 'highest' ELSE '' END AS "isHighestDamage",
+        CASE WHEN ps."averageDamagePerKnockout" = MIN(ps."averageDamagePerKnockout") OVER () THEN 'lowest' ELSE '' END AS "isLowestDamagePerKnockout",
+        CASE WHEN ps."averageShots" = MAX(ps."averageShots") OVER () THEN 'highest' ELSE '' END AS "isHighestShots",
+        CASE WHEN ps."averageRedirects" = MAX(ps."averageRedirects") OVER () THEN 'highest' ELSE '' END AS "isHighestRedirects",
+        CASE WHEN ps."averageOrbs" = MAX(ps."averageOrbs") OVER () THEN 'highest' ELSE '' END AS "isHighestOrbs"
+    FROM player_stats ps
+    WHERE ps."wasGoalie" = true -- Only goalie stats
+)
+SELECT * FROM forward_stats
+UNION ALL
+SELECT * FROM goalie_stats;
+
     `,
     []
   );
 
   const allTimeStats = await db(
     `
-      SELECT 
+      SELECT
         p."id",
         p."name",
         COUNT(mp."matchId") AS "totalMatches",
@@ -223,7 +225,7 @@ export default async function PlayersList() {
         ROUND(
           (SUM(CASE WHEN m."team1Won" = TRUE AND mp."teamNumber" = 1 THEN 1
                     WHEN m."team1Won" = FALSE AND mp."teamNumber" = 2 THEN 1
-                    ELSE 0 END)::numeric 
+                    ELSE 0 END)::numeric
           / NULLIF(COUNT(mp."matchId"), 0)) * 100, 2
         ) AS "winRate",
         COALESCE(SUM(m."duration"), 0) AS "totalPlaytime", -- Total playtime in seconds
@@ -251,12 +253,12 @@ export default async function PlayersList() {
         CASE WHEN ROUND(
           (SUM(CASE WHEN m."team1Won" = TRUE AND mp."teamNumber" = 1 THEN 1
                     WHEN m."team1Won" = FALSE AND mp."teamNumber" = 2 THEN 1
-                    ELSE 0 END)::numeric 
+                    ELSE 0 END)::numeric
           / NULLIF(COUNT(mp."matchId"), 0)) * 100, 2
         ) = MAX(ROUND(
           (SUM(CASE WHEN m."team1Won" = TRUE AND mp."teamNumber" = 1 THEN 1
                     WHEN m."team1Won" = FALSE AND mp."teamNumber" = 2 THEN 1
-                    ELSE 0 END)::numeric 
+                    ELSE 0 END)::numeric
           / NULLIF(COUNT(mp."matchId"), 0)) * 100, 2)) OVER () THEN TRUE ELSE FALSE END AS "isHighestWinRate"
       FROM "Player" p
       LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
@@ -271,7 +273,7 @@ export default async function PlayersList() {
   const perMinuteStats = await db(
     `
     WITH player_playtime AS (
-      SELECT 
+      SELECT
           p."id",
           p."name",
           COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes"
@@ -313,7 +315,7 @@ export default async function PlayersList() {
   )
   SELECT * FROM highlighted_per_minute_stats
   ORDER BY "goalsPerMinute" DESC;
-  
+
     `,
     []
   );

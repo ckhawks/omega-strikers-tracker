@@ -54,6 +54,14 @@ export default function NavigationBar() {
         >
           Bans
         </Link>
+        <Link
+          href={"/global"}
+          className={`${styles.navItem} ${
+            pathname === "/global" ? styles.active : ""
+          }`}
+        >
+          Global
+        </Link>
         {isAuthenticated && (
           <Link
             href={"/create"}
