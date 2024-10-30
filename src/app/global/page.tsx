@@ -11,39 +11,51 @@ export default async function GlobalStats() {
   const globalMapStrikers = await db(
     `
       WITH global_player_matches AS (
-        -- Retrieve relevant data for each match, categorizing by map, striker, role, and match result
-        SELECT
-          mp."striker",
-          mp."wasGoalie",
-          m."map",
-          CASE 
-              WHEN mp."teamNumber" = 1 AND m."team1Won" = TRUE THEN 'Win'
-              WHEN mp."teamNumber" = 2 AND m."team1Won" = FALSE THEN 'Win'
-              ELSE 'Loss' 
-          END AS "matchResult"
-        FROM "MatchPlayer" mp
-        JOIN "Match" m ON mp."matchId" = m."id"
-        WHERE mp."deletedAt" IS NULL
-      )
+      -- Retrieve relevant data for each match, categorizing by map, striker, role, and match result
+      SELECT
+        mp."striker",
+        mp."wasGoalie",
+        m."map",
+        CASE 
+            WHEN mp."teamNumber" = 1 AND m."team1Won" = TRUE THEN 'Win'
+            WHEN mp."teamNumber" = 2 AND m."team1Won" = FALSE THEN 'Win'
+            ELSE 'Loss' 
+        END AS "matchResult"
+      FROM "MatchPlayer" mp
+      JOIN "Match" m ON mp."matchId" = m."id"
+      WHERE mp."deletedAt" IS NULL
+    ),
+    map_total_matches AS (
+      -- Calculate the total matches played on each map
       SELECT 
-        "map",
-        "wasGoalie" AS "role",
-        "striker",
-        COUNT(*) AS "matchesPlayed",
-        SUM(CASE WHEN "matchResult" = 'Win' THEN 1 ELSE 0 END) AS "wins",
-        ROUND(
-          (SUM(CASE WHEN "matchResult" = 'Win' THEN 1 ELSE 0 END)::numeric / NULLIF(COUNT(*), 0)) * 100, 2
-        ) AS "winRate"
+        "map", 
+        COUNT(*) AS "totalMatches"
       FROM global_player_matches
-      GROUP BY "map", "role", "striker"
-      ORDER BY "map", "role", "winRate" DESC, "matchesPlayed" DESC;
+      GROUP BY "map"
+    )
+    SELECT 
+      gpm."map",
+      gpm."wasGoalie" AS "role",
+      gpm."striker",
+      COUNT(*) AS "matchesPlayed",
+      SUM(CASE WHEN gpm."matchResult" = 'Win' THEN 1 ELSE 0 END) AS "wins",
+      ROUND(
+        (SUM(CASE WHEN gpm."matchResult" = 'Win' THEN 1 ELSE 0 END)::numeric / NULLIF(COUNT(*), 0)) * 100, 2
+      ) AS "winRate",
+      mtm."totalMatches" -- Include total matches per map
+    FROM global_player_matches gpm
+    JOIN map_total_matches mtm ON gpm."map" = mtm."map"
+    GROUP BY gpm."map", "role", "striker", mtm."totalMatches"
+    ORDER BY gpm."map", "role", "winRate" DESC, "matchesPlayed" DESC;
+
     `
   );
 
   const globalMapStats = Object.entries(
     globalMapStrikers.reduce((acc, curr) => {
-      const { map, role, striker, matchesPlayed, wins, winRate } = curr;
-      if (!acc[map]) acc[map] = { Forwards: [], Goalies: [] };
+      const { map, role, striker, matchesPlayed, wins, winRate, totalMatches } =
+        curr;
+      if (!acc[map]) acc[map] = { totalMatches, Forwards: [], Goalies: [] };
       acc[map][role ? "Goalies" : "Forwards"].push({
         striker,
         matchesPlayed,
@@ -72,17 +84,29 @@ export default async function GlobalStats() {
             </tr>
           </thead>
           <tbody>
-            {globalMapStats.map(([mapName, roles]) => (
-              <>
-                {/* Forwards */}
-                {roles.Forwards.length > 0 &&
-                  roles.Forwards.map(
+            {globalMapStats.map(
+              ([mapName, { totalMatches, Forwards, Goalies }]) => (
+                <>
+                  {/* Forwards */}
+                  {Forwards.map(
                     ({ striker, matchesPlayed, wins, winRate }, index) => (
                       <tr key={`${mapName}-forward-${index}`}>
-                        <td>{index === 0 ? mapName : ""}</td>{" "}
-                        {/* Only show map name once per section */}
+                        <td>
+                          {index === 0
+                            ? `${mapName} - ${totalMatches / 6} matches`
+                            : ""}
+                        </td>
                         <td>Forward</td>
-                        <td>{striker}</td>
+                        <td>
+                          <img
+                            width={32}
+                            // @ts-ignore
+                            src={`/strikers/${STRIKER_IMAGES[striker]}`}
+                            alt={striker}
+                            style={{ borderRadius: "4px", marginRight: "8px" }}
+                          />
+                          {striker}
+                        </td>
                         <td>{winRate}%</td>
                         <td>{matchesPlayed}</td>
                         <td>{wins}</td>
@@ -90,26 +114,35 @@ export default async function GlobalStats() {
                     )
                   )}
 
-                {/* Goalies */}
-                {roles.Goalies.length > 0 &&
-                  roles.Goalies.map(
+                  {/* Goalies */}
+                  {Goalies.map(
                     ({ striker, matchesPlayed, wins, winRate }, index) => (
                       <tr key={`${mapName}-goalie-${index}`}>
                         <td>
-                          {index === 0 && roles.Forwards.length === 0
-                            ? mapName
+                          {index === 0 && Forwards.length === 0
+                            ? `${mapName} - ${totalMatches / 6} matches`
                             : ""}
                         </td>
                         <td>Goalie</td>
-                        <td>{striker}</td>
+                        <td>
+                          <img
+                            width={32}
+                            // @ts-ignore
+                            src={`/strikers/${STRIKER_IMAGES[striker]}`}
+                            alt={striker}
+                            style={{ borderRadius: "4px", marginRight: "8px" }}
+                          />
+                          {striker}
+                        </td>
                         <td>{winRate}%</td>
                         <td>{matchesPlayed}</td>
                         <td>{wins}</td>
                       </tr>
                     )
                   )}
-              </>
-            ))}
+                </>
+              )
+            )}
           </tbody>
         </table>
       </div>
