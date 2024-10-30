@@ -18,7 +18,11 @@ const formatDuration = (seconds: number) => {
   if (days > 0) {
     return `${days}d ${hours}h ${minutes}m ${remainingSeconds}s`;
   } else {
-    return `${hours}h ${minutes}m ${remainingSeconds}s`;
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${remainingSeconds}s`;
+    } else {
+      return `${minutes}m ${remainingSeconds}s`;
+    }
   }
 };
 
@@ -58,147 +62,217 @@ export default async function PlayersList() {
     []
   );
 
-  const playersStats = await db(
+  const combinedStats = await db(
     `
-      WITH player_stats AS (
-          SELECT 
-            p."id",
-            p."name",
-            COUNT(mp."matchId") AS "matchesPlayed",
-            COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "averageGoals",
-            COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "averageAssists",
-            COALESCE(ROUND(AVG(mp."statSaves")::numeric, 2), 0) AS "averageSaves",
-            COALESCE(ROUND(AVG(mp."statKnockouts")::numeric, 2), 0) AS "averageKnockouts",
-            COALESCE(ROUND(AVG(mp."statDamage")::numeric, 2), 0) AS "averageDamage",
-            COALESCE(ROUND(AVG(mp."statDamage")::numeric / AVG(mp."statKnockouts")::numeric, 2), 0) as "averageDamagePerKnockout",
-            COALESCE(ROUND(AVG(mp."statShots")::numeric, 2), 0) AS "averageShots",
-            COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "averageRedirects",
-            COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "averageOrbs"
-          FROM "Player" p
-          LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
-          WHERE p."deletedAt" IS NULL
-          GROUP BY p."id", p."name"
-      )
+    WITH player_playtime AS (
+      SELECT
+          p."id",
+          p."name",
+          COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
+          COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes"
+      FROM "Player" p
+      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+      LEFT JOIN "Match" m ON mp."matchId" = m."id"
+      WHERE p."deletedAt" IS NULL
+      GROUP BY p."id", p."name"
+  ),
+  combined_stats AS (
+      SELECT
+          p."id",
+          p."name",
+          playtime."totalPlaytimeInSeconds",
+          playtime."totalPlaytimeInMinutes",
+          COUNT(mp."matchId") AS "matchesPlayed",
+          COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
+          COALESCE(SUM(mp."statGoals") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "goalsPerMinute",
+          COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
+          COALESCE(SUM(mp."statAssists") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "assistsPerMinute",
+          COALESCE(ROUND(AVG(mp."statSaves")::numeric, 2), 0) AS "avgSavesPerMatch",
+          COALESCE(SUM(mp."statSaves") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "savesPerMinute",
+          COALESCE(ROUND(AVG(mp."statKnockouts")::numeric, 2), 0) AS "avgKOsPerMatch",
+          COALESCE(SUM(mp."statKnockouts") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "knockoutsPerMinute",
+          COALESCE(ROUND(AVG(mp."statDamage")::numeric, 2), 0) AS "avgDamagePerMatch",
+          COALESCE(SUM(mp."statDamage") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "damagePerMinute",
+          COALESCE(ROUND(AVG(mp."statShots")::numeric, 2), 0) AS "avgShotsPerMatch",
+          COALESCE(SUM(mp."statShots") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "shotsPerMinute",
+          COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "avgRedirectsPerMatch",
+          COALESCE(SUM(mp."statRedirects") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "redirectsPerMinute",
+          COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "avgOrbsPerMatch",
+          COALESCE(SUM(mp."statOrbs") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "orbsPerMinute"
+      FROM "Player" p
+      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+      LEFT JOIN player_playtime playtime ON p."id" = playtime."id"
+      WHERE p."deletedAt" IS NULL
+      GROUP BY p."id", p."name", playtime."totalPlaytimeInSeconds", playtime."totalPlaytimeInMinutes"
+  ),
+  highlighted_combined_stats AS (
       SELECT 
-          ps.*,
-          CASE 
-            WHEN ps."averageGoals" = MAX(ps."averageGoals") OVER () THEN TRUE ELSE FALSE 
-          END AS "isHighestGoals",
-          CASE 
-            WHEN ps."averageAssists" = MAX(ps."averageAssists") OVER () THEN TRUE ELSE FALSE 
-          END AS "isHighestAssists",
-          CASE 
-            WHEN ps."averageSaves" = MAX(ps."averageSaves") OVER () THEN TRUE ELSE FALSE 
-          END AS "isHighestSaves",
-          CASE 
-            WHEN ps."averageKnockouts" = MAX(ps."averageKnockouts") OVER () THEN TRUE ELSE FALSE 
-          END AS "isHighestKnockouts",
-          CASE 
-            WHEN ps."averageDamage" = MAX(ps."averageDamage") OVER () THEN TRUE ELSE FALSE 
-          END AS "isHighestDamage",
-          CASE 
-            WHEN ps."averageDamagePerKnockout" = MIN(ps."averageDamagePerKnockout") OVER () THEN TRUE ELSE FALSE 
-          END AS "isLowestDamagePerKnockout",
-          CASE 
-            WHEN ps."averageShots" = MAX(ps."averageShots") OVER () THEN TRUE ELSE FALSE 
-          END AS "isHighestShots",
-          CASE 
-            WHEN ps."averageRedirects" = MAX(ps."averageRedirects") OVER () THEN TRUE ELSE FALSE 
-          END AS "isHighestRedirects",
-          CASE 
-            WHEN ps."averageOrbs" = MAX(ps."averageOrbs") OVER () THEN TRUE ELSE FALSE 
-          END AS "isHighestOrbs"
-      FROM player_stats ps
-      ORDER BY ps."matchesPlayed" DESC;
+          *,
+          CASE WHEN "avgGoalsPerMatch" = MAX("avgGoalsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMatch",
+          CASE WHEN "goalsPerMinute" = MAX("goalsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMinute",
+          CASE WHEN "avgAssistsPerMatch" = MAX("avgAssistsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMatch",
+          CASE WHEN "assistsPerMinute" = MAX("assistsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMinute",
+          CASE WHEN "avgSavesPerMatch" = MAX("avgSavesPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMatch",
+          CASE WHEN "savesPerMinute" = MAX("savesPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMinute",
+          CASE WHEN "avgKOsPerMatch" = MAX("avgKOsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMatch",
+          CASE WHEN "knockoutsPerMinute" = MAX("knockoutsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMinute",
+          CASE WHEN "avgDamagePerMatch" = MAX("avgDamagePerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMatch",
+          CASE WHEN "damagePerMinute" = MAX("damagePerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMinute",
+          CASE WHEN "avgShotsPerMatch" = MAX("avgShotsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMatch",
+          CASE WHEN "shotsPerMinute" = MAX("shotsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMinute",
+          CASE WHEN "avgRedirectsPerMatch" = MAX("avgRedirectsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMatch",
+          CASE WHEN "redirectsPerMinute" = MAX("redirectsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMinute",
+          CASE WHEN "avgOrbsPerMatch" = MAX("avgOrbsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMatch",
+          CASE WHEN "orbsPerMinute" = MAX("orbsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMinute"
+      FROM combined_stats
+  )
+  SELECT * FROM highlighted_combined_stats
+  ORDER BY "matchesPlayed" DESC;
+  
+  
     `,
     []
   );
 
-  const playerStatsSplit = await db(
+  const forwardStats = await db(
     `
-      WITH player_stats AS (
-    SELECT
-        p."id",
-        p."name",
-        mp."wasGoalie",  -- true = goalie, false = forward
-        COUNT(mp."matchId") AS "matchesPlayed",
-        ROUND(AVG(mp."statGoals")::numeric, 2) AS "averageGoals",
-        ROUND(AVG(mp."statAssists")::numeric, 2) AS "averageAssists",
-        ROUND(AVG(mp."statSaves")::numeric, 2) AS "averageSaves",
-        ROUND(AVG(mp."statKnockouts")::numeric, 2) AS "averageKnockouts",
-        ROUND(AVG(mp."statDamage")::numeric, 0) AS "averageDamage",
-        -- Prevent division by zero by using NULLIF
-        ROUND(AVG(mp."statDamage")::numeric / NULLIF(AVG(mp."statKnockouts")::numeric, 0), 0) as "averageDamagePerKnockout",
-        ROUND(AVG(mp."statShots")::numeric, 2) AS "averageShots",
-        ROUND(AVG(mp."statRedirects")::numeric, 2) AS "averageRedirects",
-        ROUND(AVG(mp."statOrbs")::numeric, 2) AS "averageOrbs"
-    FROM "Player" p
-    LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
-    WHERE p."deletedAt" IS NULL
-    GROUP BY p."id", p."name", mp."wasGoalie"
-),
-forward_stats AS (
-    SELECT
-        ps."id",
-        ps."name",
-        'Forward' AS role,
-        ps."matchesPlayed",
-        ps."averageGoals",
-        ps."averageAssists",
-        ps."averageSaves",
-        ps."averageKnockouts",
-        ps."averageDamage",
-        ps."averageDamagePerKnockout",
-        ps."averageShots",
-        ps."averageRedirects",
-        ps."averageOrbs",
-        -- Add CASE for highlighting the highest stat for each column
-        CASE WHEN ps."averageGoals" = MAX(ps."averageGoals") OVER () THEN 'highest' ELSE '' END AS "isHighestGoals",
-        CASE WHEN ps."averageAssists" = MAX(ps."averageAssists") OVER () THEN 'highest' ELSE '' END AS "isHighestAssists",
-        CASE WHEN ps."averageSaves" = MAX(ps."averageSaves") OVER () THEN 'highest' ELSE '' END AS "isHighestSaves",
-        CASE WHEN ps."averageKnockouts" = MAX(ps."averageKnockouts") OVER () THEN 'highest' ELSE '' END AS "isHighestKnockouts",
-        CASE WHEN ps."averageDamage" = MAX(ps."averageDamage") OVER () THEN 'highest' ELSE '' END AS "isHighestDamage",
-        CASE WHEN ps."averageDamagePerKnockout" = MIN(ps."averageDamagePerKnockout") OVER () THEN 'lowest' ELSE '' END AS "isLowestDamagePerKnockout",
-        CASE WHEN ps."averageShots" = MAX(ps."averageShots") OVER () THEN 'highest' ELSE '' END AS "isHighestShots",
-        CASE WHEN ps."averageRedirects" = MAX(ps."averageRedirects") OVER () THEN 'highest' ELSE '' END AS "isHighestRedirects",
-        CASE WHEN ps."averageOrbs" = MAX(ps."averageOrbs") OVER () THEN 'highest' ELSE '' END AS "isHighestOrbs"
-    FROM player_stats ps
-    WHERE ps."wasGoalie" = false -- Only forward stats
-),
-goalie_stats AS (
-    SELECT
-        ps."id",
-        ps."name",
-        'Goalie' AS role,
-        ps."matchesPlayed",
-        ps."averageGoals",
-        ps."averageAssists",
-        ps."averageSaves",
-        ps."averageKnockouts",
-        ps."averageDamage",
-        ps."averageDamagePerKnockout",
-        ps."averageShots",
-        ps."averageRedirects",
-        ps."averageOrbs",
-        -- Add CASE for highlighting the highest stat for each column
-        CASE WHEN ps."averageGoals" = MAX(ps."averageGoals") OVER () THEN 'highest' ELSE '' END AS "isHighestGoals",
-        CASE WHEN ps."averageAssists" = MAX(ps."averageAssists") OVER () THEN 'highest' ELSE '' END AS "isHighestAssists",
-        CASE WHEN ps."averageSaves" = MAX(ps."averageSaves") OVER () THEN 'highest' ELSE '' END AS "isHighestSaves",
-        CASE WHEN ps."averageKnockouts" = MAX(ps."averageKnockouts") OVER () THEN 'highest' ELSE '' END AS "isHighestKnockouts",
-        CASE WHEN ps."averageDamage" = MAX(ps."averageDamage") OVER () THEN 'highest' ELSE '' END AS "isHighestDamage",
-        CASE WHEN ps."averageDamagePerKnockout" = MIN(ps."averageDamagePerKnockout") OVER () THEN 'lowest' ELSE '' END AS "isLowestDamagePerKnockout",
-        CASE WHEN ps."averageShots" = MAX(ps."averageShots") OVER () THEN 'highest' ELSE '' END AS "isHighestShots",
-        CASE WHEN ps."averageRedirects" = MAX(ps."averageRedirects") OVER () THEN 'highest' ELSE '' END AS "isHighestRedirects",
-        CASE WHEN ps."averageOrbs" = MAX(ps."averageOrbs") OVER () THEN 'highest' ELSE '' END AS "isHighestOrbs"
-    FROM player_stats ps
-    WHERE ps."wasGoalie" = true -- Only goalie stats
-)
-SELECT * FROM forward_stats
-UNION ALL
-SELECT * FROM goalie_stats;
-
-    `,
+    WITH player_playtime AS (
+      SELECT
+          p."id",
+          p."name",
+          COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
+          COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes"
+      FROM "Player" p
+      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+      LEFT JOIN "Match" m ON mp."matchId" = m."id"
+      WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = false
+      GROUP BY p."id", p."name"
+  ),
+  forward_stats AS (
+      SELECT
+          p."id",
+          p."name",
+          playtime."totalPlaytimeInSeconds",
+          playtime."totalPlaytimeInMinutes",
+          COUNT(mp."matchId") AS "matchesPlayed",
+          COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
+          COALESCE(SUM(mp."statGoals") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "goalsPerMinute",
+          COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
+          COALESCE(SUM(mp."statAssists") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "assistsPerMinute",
+          COALESCE(ROUND(AVG(mp."statSaves")::numeric, 2), 0) AS "avgSavesPerMatch",
+          COALESCE(SUM(mp."statSaves") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "savesPerMinute",
+          COALESCE(ROUND(AVG(mp."statKnockouts")::numeric, 2), 0) AS "avgKOsPerMatch",
+          COALESCE(SUM(mp."statKnockouts") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "knockoutsPerMinute",
+          COALESCE(ROUND(AVG(mp."statDamage")::numeric, 2), 0) AS "avgDamagePerMatch",
+          COALESCE(SUM(mp."statDamage") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "damagePerMinute",
+          COALESCE(ROUND(AVG(mp."statShots")::numeric, 2), 0) AS "avgShotsPerMatch",
+          COALESCE(SUM(mp."statShots") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "shotsPerMinute",
+          COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "avgRedirectsPerMatch",
+          COALESCE(SUM(mp."statRedirects") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "redirectsPerMinute",
+          COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "avgOrbsPerMatch",
+          COALESCE(SUM(mp."statOrbs") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "orbsPerMinute"
+      FROM "Player" p
+      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+      LEFT JOIN player_playtime playtime ON p."id" = playtime."id"
+      WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = false
+      GROUP BY p."id", p."name", playtime."totalPlaytimeInSeconds", playtime."totalPlaytimeInMinutes"
+  ),
+  highlighted_forward_stats AS (
+      SELECT 
+          *,
+          CASE WHEN "avgGoalsPerMatch" = MAX("avgGoalsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMatch",
+          CASE WHEN "goalsPerMinute" = MAX("goalsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMinute",
+          CASE WHEN "avgAssistsPerMatch" = MAX("avgAssistsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMatch",
+          CASE WHEN "assistsPerMinute" = MAX("assistsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMinute",
+          CASE WHEN "avgSavesPerMatch" = MAX("avgSavesPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMatch",
+          CASE WHEN "savesPerMinute" = MAX("savesPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMinute",
+          CASE WHEN "avgKOsPerMatch" = MAX("avgKOsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMatch",
+          CASE WHEN "knockoutsPerMinute" = MAX("knockoutsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMinute",
+          CASE WHEN "avgDamagePerMatch" = MAX("avgDamagePerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMatch",
+          CASE WHEN "damagePerMinute" = MAX("damagePerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMinute",
+          CASE WHEN "avgShotsPerMatch" = MAX("avgShotsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMatch",
+          CASE WHEN "shotsPerMinute" = MAX("shotsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMinute",
+          CASE WHEN "avgRedirectsPerMatch" = MAX("avgRedirectsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMatch",
+          CASE WHEN "redirectsPerMinute" = MAX("redirectsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMinute",
+          CASE WHEN "avgOrbsPerMatch" = MAX("avgOrbsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMatch",
+          CASE WHEN "orbsPerMinute" = MAX("orbsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMinute"
+      FROM forward_stats
+  )
+  SELECT * FROM highlighted_forward_stats
+  ORDER BY "matchesPlayed" DESC;
+  
+  `,
     []
+  );
+
+  const goalieStats = await db(
+    `
+    WITH player_playtime AS (
+      SELECT
+          p."id",
+          p."name",
+          COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
+          COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes"
+      FROM "Player" p
+      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+      LEFT JOIN "Match" m ON mp."matchId" = m."id"
+      WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = true
+      GROUP BY p."id", p."name"
+  ),
+  forward_stats AS (
+      SELECT
+          p."id",
+          p."name",
+          playtime."totalPlaytimeInSeconds",
+          playtime."totalPlaytimeInMinutes",
+          COUNT(mp."matchId") AS "matchesPlayed",
+          COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
+          COALESCE(SUM(mp."statGoals") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "goalsPerMinute",
+          COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
+          COALESCE(SUM(mp."statAssists") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "assistsPerMinute",
+          COALESCE(ROUND(AVG(mp."statSaves")::numeric, 2), 0) AS "avgSavesPerMatch",
+          COALESCE(SUM(mp."statSaves") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "savesPerMinute",
+          COALESCE(ROUND(AVG(mp."statKnockouts")::numeric, 2), 0) AS "avgKOsPerMatch",
+          COALESCE(SUM(mp."statKnockouts") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "knockoutsPerMinute",
+          COALESCE(ROUND(AVG(mp."statDamage")::numeric, 2), 0) AS "avgDamagePerMatch",
+          COALESCE(SUM(mp."statDamage") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "damagePerMinute",
+          COALESCE(ROUND(AVG(mp."statShots")::numeric, 2), 0) AS "avgShotsPerMatch",
+          COALESCE(SUM(mp."statShots") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "shotsPerMinute",
+          COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "avgRedirectsPerMatch",
+          COALESCE(SUM(mp."statRedirects") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "redirectsPerMinute",
+          COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "avgOrbsPerMatch",
+          COALESCE(SUM(mp."statOrbs") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "orbsPerMinute"
+      FROM "Player" p
+      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+      LEFT JOIN player_playtime playtime ON p."id" = playtime."id"
+      WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = true
+      GROUP BY p."id", p."name", playtime."totalPlaytimeInSeconds", playtime."totalPlaytimeInMinutes"
+  ),
+  highlighted_forward_stats AS (
+      SELECT 
+          *,
+          CASE WHEN "avgGoalsPerMatch" = MAX("avgGoalsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMatch",
+          CASE WHEN "goalsPerMinute" = MAX("goalsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMinute",
+          CASE WHEN "avgAssistsPerMatch" = MAX("avgAssistsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMatch",
+          CASE WHEN "assistsPerMinute" = MAX("assistsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMinute",
+          CASE WHEN "avgSavesPerMatch" = MAX("avgSavesPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMatch",
+          CASE WHEN "savesPerMinute" = MAX("savesPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMinute",
+          CASE WHEN "avgKOsPerMatch" = MAX("avgKOsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMatch",
+          CASE WHEN "knockoutsPerMinute" = MAX("knockoutsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMinute",
+          CASE WHEN "avgDamagePerMatch" = MAX("avgDamagePerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMatch",
+          CASE WHEN "damagePerMinute" = MAX("damagePerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMinute",
+          CASE WHEN "avgShotsPerMatch" = MAX("avgShotsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMatch",
+          CASE WHEN "shotsPerMinute" = MAX("shotsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMinute",
+          CASE WHEN "avgRedirectsPerMatch" = MAX("avgRedirectsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMatch",
+          CASE WHEN "redirectsPerMinute" = MAX("redirectsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMinute",
+          CASE WHEN "avgOrbsPerMatch" = MAX("avgOrbsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMatch",
+          CASE WHEN "orbsPerMinute" = MAX("orbsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMinute"
+      FROM forward_stats
+  )
+  SELECT * FROM highlighted_forward_stats
+  ORDER BY "matchesPlayed" DESC;
+  
+    `
   );
 
   const allTimeStats = await db(
@@ -270,68 +344,6 @@ SELECT * FROM goalie_stats;
     []
   );
 
-  const perMinuteStats = await db(
-    `
-    WITH player_playtime AS (
-      SELECT
-          p."id",
-          p."name",
-          COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes"
-      FROM "Player" p
-      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
-      LEFT JOIN "Match" m ON mp."matchId" = m."id"
-      WHERE p."deletedAt" IS NULL
-      GROUP BY p."id", p."name"
-  ),
-  per_minute_stats AS (
-      SELECT
-          p."id",
-          p."name",
-          COALESCE(SUM(mp."statGoals") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "goalsPerMinute",
-          COALESCE(SUM(mp."statAssists") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "assistsPerMinute",
-          COALESCE(SUM(mp."statSaves") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "savesPerMinute",
-          COALESCE(SUM(mp."statKnockouts") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "knockoutsPerMinute",
-          COALESCE(SUM(mp."statDamage") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "damagePerMinute",
-          COALESCE(SUM(mp."statShots") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "shotsPerMinute",
-          COALESCE(SUM(mp."statRedirects") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "redirectsPerMinute",
-          COALESCE(SUM(mp."statOrbs") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "orbsPerMinute"
-      FROM "Player" p
-      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
-      LEFT JOIN player_playtime playtime ON p."id" = playtime."id"
-      WHERE p."deletedAt" IS NULL
-      GROUP BY p."id", p."name", playtime."totalPlaytimeInMinutes"
-  ),
-  highlighted_per_minute_stats AS (
-      SELECT *,
-          CASE WHEN "goalsPerMinute" = MAX("goalsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMinute",
-          CASE WHEN "assistsPerMinute" = MAX("assistsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMinute",
-          CASE WHEN "savesPerMinute" = MAX("savesPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMinute",
-          CASE WHEN "knockoutsPerMinute" = MAX("knockoutsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestKnockoutsPerMinute",
-          CASE WHEN "damagePerMinute" = MAX("damagePerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMinute",
-          CASE WHEN "shotsPerMinute" = MAX("shotsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMinute",
-          CASE WHEN "redirectsPerMinute" = MAX("redirectsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMinute",
-          CASE WHEN "orbsPerMinute" = MAX("orbsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMinute"
-      FROM per_minute_stats
-  )
-  SELECT * FROM highlighted_per_minute_stats
-  ORDER BY "goalsPerMinute" DESC;
-
-    `,
-    []
-  );
-
-  // console.log(playersStats);
-  const forwardStats = playerStatsSplit.filter(
-    (player) => player.role === "Forward"
-  );
-  const goalieStats = playerStatsSplit.filter(
-    (player) => player.role === "Goalie"
-  );
-
-  // console.log("forwardStats", forwardStats);
-
-  // console.log(players);
-
   return (
     <div className={styles.main}>
       <NavigationBar />
@@ -386,280 +398,87 @@ SELECT * FROM goalie_stats;
             );
           })}
       </div>
-      <h3>Forward & Goalie</h3>
+      <div>
+        <h3>Forward & Goalie</h3>
+        <div>Includes average per match and average per minute</div>
+      </div>
       <table>
         <thead>
           <tr>
             <th>Player</th>
+            <th>Playtime</th>
             <th>Matches</th>
-            <th>Avg Goals</th>
-            <th>Avg Assists</th>
-            <th>Avg Saves</th>
-            <th>Avg KOs</th>
-            <th>Avg Damage</th>
-            <th>Avg Dmg per KO</th>
-            <th>Avg Shots</th>
-            <th>Avg Redirects</th>
-            <th>Avg Orbs</th>
+            <th>Length</th>
+            <th colSpan={2}>
+              <center>Goals</center>
+            </th>
+            <th colSpan={2}>
+              <center>Assists</center>
+            </th>
+            <th colSpan={2}>
+              <center>Saves</center>
+            </th>
+            <th colSpan={2}>
+              <center>KOs</center>
+            </th>
+            <th colSpan={2}>
+              <center>Damage</center>
+            </th>
+            <th colSpan={2}>
+              <center>Shots</center>
+            </th>
+            <th colSpan={2}>
+              <center>Redirects</center>
+            </th>
+            <th colSpan={2}>
+              <center>Orbs</center>
+            </th>
           </tr>
-        </thead>
-        <tbody>
-          {playersStats &&
-            playersStats.map((player: any, index: number) => (
-              <>
-                {player.matchesPlayed > 0 && (
-                  <tr key={index}>
-                    <td>{player.name}</td>
-                    <td>{player.matchesPlayed}</td>
-                    <td
-                      className={player.isHighestGoals ? styles.highlight : ""}
-                    >
-                      {player.averageGoals}
-                    </td>
-                    <td
-                      className={
-                        player.isHighestAssists ? styles.highlight : ""
-                      }
-                    >
-                      {player.averageAssists}
-                    </td>
-                    <td
-                      className={player.isHighestSaves ? styles.highlight : ""}
-                    >
-                      {player.averageSaves}
-                    </td>
-                    <td
-                      className={
-                        player.isHighestKnockouts ? styles.highlight : ""
-                      }
-                    >
-                      {player.averageKnockouts}
-                    </td>
-                    <td
-                      className={player.isHighestDamage ? styles.highlight : ""}
-                    >
-                      {Math.round(player.averageDamage)}
-                    </td>
-                    <td
-                      className={
-                        player.isLowestDamagePerKnockout ? styles.highlight : ""
-                      }
-                    >
-                      {/* {isFinite(player.averageDamagePerKnockout)
-                        ? player.averageDamagePerKnockout
-                        : "N/A"} */}
-                      {Math.round(player.averageDamagePerKnockout)}
-                    </td>
-                    <td
-                      className={player.isHighestShots ? styles.highlight : ""}
-                    >
-                      {player.averageShots}
-                    </td>
-                    <td
-                      className={
-                        player.isHighestRedirects ? styles.highlight : ""
-                      }
-                    >
-                      {player.averageRedirects}
-                    </td>
-                    <td
-                      className={player.isHighestOrbs ? styles.highlight : ""}
-                    >
-                      {player.averageOrbs}
-                    </td>
-                  </tr>
-                )}
-              </>
-            ))}
-        </tbody>
-      </table>
-      <h3>Forward</h3>
-      <table>
-        <thead>
           <tr>
-            <th>Player</th>
-            <th>Matches</th>
-            <th>Avg Goals</th>
-            <th>Avg Assists</th>
-            <th>Avg Saves</th>
-            <th>Avg KOs</th>
-            <th>Avg Damage</th>
-            <th>Avg Dmg per KO</th>
-            <th>Avg Shots</th>
-            <th>Avg Redirects</th>
-            <th>Avg Orbs</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
           </tr>
         </thead>
         <tbody>
-          {forwardStats &&
-            forwardStats.map((player: any, index: number) => (
-              <>
-                {player.matchesPlayed > 0 && (
-                  <tr key={index}>
-                    <td>{player.name}</td>
-                    <td>{player.matchesPlayed}</td>
-                    <td
-                      className={player.isHighestGoals ? styles.highlight : ""}
-                    >
-                      {player.averageGoals}
-                    </td>
-                    <td
-                      className={
-                        player.isHighestAssists ? styles.highlight : ""
-                      }
-                    >
-                      {player.averageAssists}
-                    </td>
-                    <td
-                      className={player.isHighestSaves ? styles.highlight : ""}
-                    >
-                      {player.averageSaves}
-                    </td>
-                    <td
-                      className={
-                        player.isHighestKnockouts ? styles.highlight : ""
-                      }
-                    >
-                      {player.averageKnockouts}
-                    </td>
-                    <td
-                      className={player.isHighestDamage ? styles.highlight : ""}
-                    >
-                      {Math.round(player.averageDamage)}
-                    </td>
-                    <td
-                      className={
-                        player.isLowestDamagePerKnockout ? styles.highlight : ""
-                      }
-                    >
-                      {Math.round(player.averageDamagePerKnockout)}
-                    </td>
-                    <td
-                      className={player.isHighestShots ? styles.highlight : ""}
-                    >
-                      {player.averageShots}
-                    </td>
-                    <td
-                      className={
-                        player.isHighestRedirects ? styles.highlight : ""
-                      }
-                    >
-                      {player.averageRedirects}
-                    </td>
-                    <td
-                      className={player.isHighestOrbs ? styles.highlight : ""}
-                    >
-                      {player.averageOrbs}
-                    </td>
-                  </tr>
-                )}
-              </>
-            ))}
-        </tbody>
-      </table>
-      <h3>Goalie</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th>Matches</th>
-            <th>Avg Goals</th>
-            <th>Avg Assists</th>
-            <th>Avg Saves</th>
-            <th>Avg KOs</th>
-            <th>Avg Damage</th>
-            <th>Avg Dmg per KO</th>
-            <th>Avg Shots</th>
-            <th>Avg Redirects</th>
-            <th>Avg Orbs</th>
-          </tr>
-        </thead>
-        <tbody>
-          {goalieStats &&
-            goalieStats.map((player: any, index: number) => (
-              <>
-                {player.matchesPlayed > 0 && (
-                  <tr key={index}>
-                    <td>{player.name}</td>
-                    <td>{player.matchesPlayed}</td>
-                    <td
-                      className={player.isHighestGoals ? styles.highlight : ""}
-                    >
-                      {player.averageGoals}
-                    </td>
-                    <td
-                      className={
-                        player.isHighestAssists ? styles.highlight : ""
-                      }
-                    >
-                      {player.averageAssists}
-                    </td>
-                    <td
-                      className={player.isHighestSaves ? styles.highlight : ""}
-                    >
-                      {player.averageSaves}
-                    </td>
-                    <td
-                      className={
-                        player.isHighestKnockouts ? styles.highlight : ""
-                      }
-                    >
-                      {player.averageKnockouts}
-                    </td>
-                    <td
-                      className={player.isHighestDamage ? styles.highlight : ""}
-                    >
-                      {Math.round(player.averageDamage)}
-                    </td>
-                    <td
-                      className={
-                        player.isLowestDamagePerKnockout ? styles.highlight : ""
-                      }
-                    >
-                      {Math.round(player.averageDamagePerKnockout)}
-                    </td>
-                    <td
-                      className={player.isHighestShots ? styles.highlight : ""}
-                    >
-                      {player.averageShots}
-                    </td>
-                    <td
-                      className={
-                        player.isHighestRedirects ? styles.highlight : ""
-                      }
-                    >
-                      {player.averageRedirects}
-                    </td>
-                    <td
-                      className={player.isHighestOrbs ? styles.highlight : ""}
-                    >
-                      {player.averageOrbs}
-                    </td>
-                  </tr>
-                )}
-              </>
-            ))}
-        </tbody>
-      </table>
-      <h3>Per-Minute Stats</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th>Goals/Min</th>
-            <th>Assists/Min</th>
-            <th>Saves/Min</th>
-            <th>KOs/Min</th>
-            <th>Damage/Min</th>
-            <th>Shots/Min</th>
-            <th>Redirects/Min</th>
-            <th>Orbs/Min</th>
-          </tr>
-        </thead>
-        <tbody>
-          {perMinuteStats.map((player, index) => (
+          {combinedStats.map((player, index) => (
             <tr key={index}>
               <td>{player.name}</td>
+              <td>{formatDuration(player.totalPlaytimeInSeconds)}</td>
+              <td>{player.matchesPlayed}</td>
+              <td>
+                {formatDuration(
+                  Number(
+                    (
+                      player.totalPlaytimeInSeconds / player.matchesPlayed
+                    ).toFixed(0)
+                  )
+                )}
+              </td>
+              <td
+                className={
+                  player.isHighestGoalsPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgGoalsPerMatch).toFixed(2)}
+              </td>
               <td
                 className={
                   player.isHighestGoalsPerMinute ? styles.highlight : ""
@@ -669,59 +488,466 @@ SELECT * FROM goalie_stats;
               </td>
               <td
                 className={
+                  player.isHighestAssistsPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgAssistsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={
                   player.isHighestAssistsPerMinute ? styles.highlight : ""
                 }
               >
-                {Number(player.assistsPerMinute ?? 0).toFixed(2)}
+                {Number(player.assistsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestSavesPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgSavesPerMatch).toFixed(2)}
               </td>
               <td
                 className={
                   player.isHighestSavesPerMinute ? styles.highlight : ""
                 }
               >
-                {Number(player.savesPerMinute ?? 0).toFixed(2)}
+                {Number(player.savesPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={player.isHighestKOsPerMatch ? styles.highlight : ""}
+              >
+                {Number(player.avgKOsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={player.isHighestKOsPerMinute ? styles.highlight : ""}
+              >
+                {Number(player.knockoutsPerMinute).toFixed(2)}
               </td>
               <td
                 className={
-                  player.isHighestKnockoutsPerMinute ? styles.highlight : ""
+                  player.isHighestDamagePerMatch ? styles.highlight : ""
                 }
               >
-                {Number(player.knockoutsPerMinute ?? 0).toFixed(2)}
+                {Number(player.avgDamagePerMatch).toFixed(0)}
               </td>
               <td
                 className={
                   player.isHighestDamagePerMinute ? styles.highlight : ""
                 }
               >
-                {Number(player.damagePerMinute ?? 0).toFixed(2)}
+                {Number(player.damagePerMinute).toFixed(0)}
+              </td>
+              <td
+                className={
+                  player.isHighestShotsPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgShotsPerMatch).toFixed(2)}
               </td>
               <td
                 className={
                   player.isHighestShotsPerMinute ? styles.highlight : ""
                 }
               >
-                {Number(player.shotsPerMinute ?? 0).toFixed(2)}
+                {Number(player.shotsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestRedirectsPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgRedirectsPerMatch).toFixed(2)}
               </td>
               <td
                 className={
                   player.isHighestRedirectsPerMinute ? styles.highlight : ""
                 }
               >
-                {Number(player.redirectsPerMinute ?? 0).toFixed(2)}
+                {Number(player.redirectsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={player.isHighestOrbsPerMatch ? styles.highlight : ""}
+              >
+                {Number(player.avgOrbsPerMatch).toFixed(2)}
               </td>
               <td
                 className={
                   player.isHighestOrbsPerMinute ? styles.highlight : ""
                 }
               >
-                {Number(player.orbsPerMinute ?? 0).toFixed(2)}
+                {Number(player.orbsPerMinute).toFixed(2)}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <h3>All-Time Stats</h3>
+      <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        Forward
+        <img src="/icons/skip-forward.svg" width={28} />
+      </h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Playtime</th>
+            <th>Matches</th>
+            <th>Length</th>
+            <th colSpan={2}>
+              <center>Goals</center>
+            </th>
+            <th colSpan={2}>
+              <center>Assists</center>
+            </th>
+            <th colSpan={2}>
+              <center>Saves</center>
+            </th>
+            <th colSpan={2}>
+              <center>KOs</center>
+            </th>
+            <th colSpan={2}>
+              <center>Damage</center>
+            </th>
+            <th colSpan={2}>
+              <center>Shots</center>
+            </th>
+            <th colSpan={2}>
+              <center>Redirects</center>
+            </th>
+            <th colSpan={2}>
+              <center>Orbs</center>
+            </th>
+          </tr>
+          <tr>
+            <th colSpan={4}></th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+          </tr>
+        </thead>
+        <tbody>
+          {forwardStats.map((player, index) => (
+            <tr key={index}>
+              <td>{player.name}</td>
+              <td>{formatDuration(player.totalPlaytimeInSeconds)}</td>
+              <td>{player.matchesPlayed}</td>
+              <td>
+                {formatDuration(
+                  Number(
+                    (
+                      player.totalPlaytimeInSeconds / player.matchesPlayed
+                    ).toFixed(0)
+                  )
+                )}
+              </td>
+              <td
+                className={
+                  player.isHighestGoalsPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgGoalsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestGoalsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.goalsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestAssistsPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgAssistsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestAssistsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.assistsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestSavesPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgSavesPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestSavesPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.savesPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={player.isHighestKOsPerMatch ? styles.highlight : ""}
+              >
+                {Number(player.avgKOsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={player.isHighestKOsPerMinute ? styles.highlight : ""}
+              >
+                {Number(player.knockoutsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestDamagePerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgDamagePerMatch).toFixed(0)}
+              </td>
+              <td
+                className={
+                  player.isHighestDamagePerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.damagePerMinute).toFixed(0)}
+              </td>
+              <td
+                className={
+                  player.isHighestShotsPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgShotsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestShotsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.shotsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestRedirectsPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgRedirectsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestRedirectsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.redirectsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={player.isHighestOrbsPerMatch ? styles.highlight : ""}
+              >
+                {Number(player.avgOrbsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestOrbsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.orbsPerMinute).toFixed(2)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        Goalie
+        <img src="/icons/shield.svg" width={28} />
+      </h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Playtime</th>
+            <th>Matches</th>
+            <th>Length</th>
+            <th colSpan={2}>
+              <center>Goals</center>
+            </th>
+            <th colSpan={2}>
+              <center>Assists</center>
+            </th>
+            <th colSpan={2}>
+              <center>Saves</center>
+            </th>
+            <th colSpan={2}>
+              <center>KOs</center>
+            </th>
+            <th colSpan={2}>
+              <center>Damage</center>
+            </th>
+            <th colSpan={2}>
+              <center>Shots</center>
+            </th>
+            <th colSpan={2}>
+              <center>Redirects</center>
+            </th>
+            <th colSpan={2}>
+              <center>Orbs</center>
+            </th>
+          </tr>
+          <tr>
+            <th colSpan={4}></th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+            <th>Per Match</th>
+            <th>Per Minute</th>
+          </tr>
+        </thead>
+        <tbody>
+          {goalieStats.map((player, index) => (
+            <tr key={index}>
+              <td>{player.name}</td>
+              <td>{formatDuration(player.totalPlaytimeInSeconds)}</td>
+              <td>{player.matchesPlayed}</td>
+              <td>
+                {formatDuration(
+                  Number(
+                    (
+                      player.totalPlaytimeInSeconds / player.matchesPlayed
+                    ).toFixed(0)
+                  )
+                )}
+              </td>
+              <td
+                className={
+                  player.isHighestGoalsPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgGoalsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestGoalsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.goalsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestAssistsPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgAssistsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestAssistsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.assistsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestSavesPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgSavesPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestSavesPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.savesPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={player.isHighestKOsPerMatch ? styles.highlight : ""}
+              >
+                {Number(player.avgKOsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={player.isHighestKOsPerMinute ? styles.highlight : ""}
+              >
+                {Number(player.knockoutsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestDamagePerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgDamagePerMatch).toFixed(0)}
+              </td>
+              <td
+                className={
+                  player.isHighestDamagePerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.damagePerMinute).toFixed(0)}
+              </td>
+              <td
+                className={
+                  player.isHighestShotsPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgShotsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestShotsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.shotsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestRedirectsPerMatch ? styles.highlight : ""
+                }
+              >
+                {Number(player.avgRedirectsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestRedirectsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.redirectsPerMinute).toFixed(2)}
+              </td>
+              <td
+                className={player.isHighestOrbsPerMatch ? styles.highlight : ""}
+              >
+                {Number(player.avgOrbsPerMatch).toFixed(2)}
+              </td>
+              <td
+                className={
+                  player.isHighestOrbsPerMinute ? styles.highlight : ""
+                }
+              >
+                {Number(player.orbsPerMinute).toFixed(2)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3>All-Time Totals</h3>
       <table>
         <thead>
           <tr>
