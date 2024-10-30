@@ -55,6 +55,14 @@ export default function NavigationBar() {
           Bans
         </Link>
         <Link
+          href={"/strikers"}
+          className={`${styles.navItem} ${
+            pathname === "/strikers" ? styles.active : ""
+          }`}
+        >
+          Strikers
+        </Link>
+        <Link
           href={"/global"}
           className={`${styles.navItem} ${
             pathname === "/global" ? styles.active : ""
