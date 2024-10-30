@@ -89,7 +89,20 @@ export default async function GlobalStats() {
                 <>
                   {/* Forwards */}
                   {Forwards.map(
-                    ({ striker, matchesPlayed, wins, winRate }, index) => (
+                    (
+                      {
+                        striker,
+                        matchesPlayed,
+                        wins,
+                        winRate,
+                      }: {
+                        striker: any;
+                        matchesPlayed: number;
+                        wins: number;
+                        winRate: number;
+                      },
+                      index: number
+                    ) => (
                       <tr key={`${mapName}-forward-${index}`}>
                         <td>
                           {index === 0
@@ -116,7 +129,20 @@ export default async function GlobalStats() {
 
                   {/* Goalies */}
                   {Goalies.map(
-                    ({ striker, matchesPlayed, wins, winRate }, index) => (
+                    (
+                      {
+                        striker,
+                        matchesPlayed,
+                        wins,
+                        winRate,
+                      }: {
+                        striker: any;
+                        matchesPlayed: number;
+                        wins: number;
+                        winRate: number;
+                      },
+                      index: number
+                    ) => (
                       <tr key={`${mapName}-goalie-${index}`}>
                         <td>
                           {index === 0 && Forwards.length === 0

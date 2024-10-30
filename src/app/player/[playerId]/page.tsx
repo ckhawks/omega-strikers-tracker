@@ -378,26 +378,35 @@ export default async function PlayerDetails({
                       <td>
                         <div style={{ display: "flex", gap: "8px" }}>
                           {Wins.Forwards.length > 0 ? (
-                            Wins.Forwards.map(({ striker, count }, index) => (
-                              <div
-                                key={index}
-                                style={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <img
-                                  width={32}
-                                  src={`/strikers/${STRIKER_IMAGES[striker]}`}
-                                  alt={striker}
-                                  style={{ borderRadius: "4px" }}
-                                />
-                                <span style={{ fontSize: "12px" }}>
-                                  {count}x
-                                </span>
-                              </div>
-                            ))
+                            Wins.Forwards.map(
+                              (
+                                {
+                                  striker,
+                                  count,
+                                }: { striker: any; count: number },
+                                index: number
+                              ) => (
+                                <div
+                                  key={index}
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <img
+                                    width={32}
+                                    // @ts-ignore
+                                    src={`/strikers/${STRIKER_IMAGES[striker]}`}
+                                    alt={striker}
+                                    style={{ borderRadius: "4px" }}
+                                  />
+                                  <span style={{ fontSize: "12px" }}>
+                                    {count}x
+                                  </span>
+                                </div>
+                              )
+                            )
                           ) : (
                             <p>N/A</p>
                           )}
@@ -408,26 +417,35 @@ export default async function PlayerDetails({
                       <td>
                         <div style={{ display: "flex", gap: "8px" }}>
                           {Losses.Forwards.length > 0 ? (
-                            Losses.Forwards.map(({ striker, count }, index) => (
-                              <div
-                                key={index}
-                                style={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <img
-                                  width={32}
-                                  src={`/strikers/${STRIKER_IMAGES[striker]}`}
-                                  alt={striker}
-                                  style={{ borderRadius: "4px" }}
-                                />
-                                <span style={{ fontSize: "12px" }}>
-                                  {count}x
-                                </span>
-                              </div>
-                            ))
+                            Losses.Forwards.map(
+                              (
+                                {
+                                  striker,
+                                  count,
+                                }: { striker: any; count: number },
+                                index: number
+                              ) => (
+                                <div
+                                  key={index}
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <img
+                                    width={32}
+                                    // @ts-ignore
+                                    src={`/strikers/${STRIKER_IMAGES[striker]}`}
+                                    alt={striker}
+                                    style={{ borderRadius: "4px" }}
+                                  />
+                                  <span style={{ fontSize: "12px" }}>
+                                    {count}x
+                                  </span>
+                                </div>
+                              )
+                            )
                           ) : (
                             <p>N/A</p>
                           )}
@@ -438,26 +456,35 @@ export default async function PlayerDetails({
                       <td>
                         <div style={{ display: "flex", gap: "8px" }}>
                           {Wins.Goalies.length > 0 ? (
-                            Wins.Goalies.map(({ striker, count }, index) => (
-                              <div
-                                key={index}
-                                style={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <img
-                                  width={32}
-                                  src={`/strikers/${STRIKER_IMAGES[striker]}`}
-                                  alt={striker}
-                                  style={{ borderRadius: "4px" }}
-                                />
-                                <span style={{ fontSize: "12px" }}>
-                                  {count}x
-                                </span>
-                              </div>
-                            ))
+                            Wins.Goalies.map(
+                              (
+                                {
+                                  striker,
+                                  count,
+                                }: { striker: any; count: number },
+                                index: number
+                              ) => (
+                                <div
+                                  key={index}
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <img
+                                    width={32}
+                                    // @ts-ignore
+                                    src={`/strikers/${STRIKER_IMAGES[striker]}`}
+                                    alt={striker}
+                                    style={{ borderRadius: "4px" }}
+                                  />
+                                  <span style={{ fontSize: "12px" }}>
+                                    {count}x
+                                  </span>
+                                </div>
+                              )
+                            )
                           ) : (
                             <p>N/A</p>
                           )}
@@ -468,26 +495,35 @@ export default async function PlayerDetails({
                       <td>
                         <div style={{ display: "flex", gap: "8px" }}>
                           {Losses.Goalies.length > 0 ? (
-                            Losses.Goalies.map(({ striker, count }, index) => (
-                              <div
-                                key={index}
-                                style={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <img
-                                  width={32}
-                                  src={`/strikers/${STRIKER_IMAGES[striker]}`}
-                                  alt={striker}
-                                  style={{ borderRadius: "4px" }}
-                                />
-                                <span style={{ fontSize: "12px" }}>
-                                  {count}x
-                                </span>
-                              </div>
-                            ))
+                            Losses.Goalies.map(
+                              (
+                                {
+                                  striker,
+                                  count,
+                                }: { striker: any; count: number },
+                                index: number
+                              ) => (
+                                <div
+                                  key={index}
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <img
+                                    width={32}
+                                    // @ts-ignore
+                                    src={`/strikers/${STRIKER_IMAGES[striker]}`}
+                                    alt={striker}
+                                    style={{ borderRadius: "4px" }}
+                                  />
+                                  <span style={{ fontSize: "12px" }}>
+                                    {count}x
+                                  </span>
+                                </div>
+                              )
+                            )
                           ) : (
                             <p>N/A</p>
                           )}
