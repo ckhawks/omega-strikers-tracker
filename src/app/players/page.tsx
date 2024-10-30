@@ -200,10 +200,110 @@ export default async function PlayersList() {
   )
   SELECT * FROM highlighted_forward_stats
   ORDER BY "matchesPlayed" DESC;
-  
   `,
     []
   );
+
+  const anonymousCombinedStatsResult = await db(
+    `
+    SELECT
+    NULL AS "id",
+    'Anonymous' AS "name",
+    COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
+    COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes",
+    COUNT(mp."matchId") AS "matchesPlayed",
+    COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
+    COALESCE(SUM(mp."statGoals") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "goalsPerMinute",
+    COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
+    COALESCE(SUM(mp."statAssists") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "assistsPerMinute",
+    COALESCE(ROUND(AVG(mp."statSaves")::numeric, 2), 0) AS "avgSavesPerMatch",
+    COALESCE(SUM(mp."statSaves") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "savesPerMinute",
+    COALESCE(ROUND(AVG(mp."statKnockouts")::numeric, 2), 0) AS "avgKOsPerMatch",
+    COALESCE(SUM(mp."statKnockouts") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "knockoutsPerMinute",
+    COALESCE(ROUND(AVG(mp."statDamage")::numeric, 2), 0) AS "avgDamagePerMatch",
+    COALESCE(SUM(mp."statDamage") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "damagePerMinute",
+    COALESCE(ROUND(AVG(mp."statShots")::numeric, 2), 0) AS "avgShotsPerMatch",
+    COALESCE(SUM(mp."statShots") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "shotsPerMinute",
+    COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "avgRedirectsPerMatch",
+    COALESCE(SUM(mp."statRedirects") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "redirectsPerMinute",
+    COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "avgOrbsPerMatch",
+    COALESCE(SUM(mp."statOrbs") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "orbsPerMinute"
+FROM "MatchPlayer" mp
+LEFT JOIN "Match" m ON mp."matchId" = m."id"
+WHERE mp."playerId" IS NULL;
+
+    `,
+    []
+  );
+
+  const anonymousCombinedStats = anonymousCombinedStatsResult[0];
+
+  const anonymousForwardStatsResult = await db(
+    `
+    SELECT
+    NULL AS "id",
+    'Anonymous' AS "name",
+    COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
+    COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes",
+    COUNT(mp."matchId") AS "matchesPlayed",
+    COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
+    COALESCE(SUM(mp."statGoals") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "goalsPerMinute",
+    COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
+    COALESCE(SUM(mp."statAssists") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "assistsPerMinute",
+    COALESCE(ROUND(AVG(mp."statSaves")::numeric, 2), 0) AS "avgSavesPerMatch",
+    COALESCE(SUM(mp."statSaves") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "savesPerMinute",
+    COALESCE(ROUND(AVG(mp."statKnockouts")::numeric, 2), 0) AS "avgKOsPerMatch",
+    COALESCE(SUM(mp."statKnockouts") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "knockoutsPerMinute",
+    COALESCE(ROUND(AVG(mp."statDamage")::numeric, 2), 0) AS "avgDamagePerMatch",
+    COALESCE(SUM(mp."statDamage") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "damagePerMinute",
+    COALESCE(ROUND(AVG(mp."statShots")::numeric, 2), 0) AS "avgShotsPerMatch",
+    COALESCE(SUM(mp."statShots") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "shotsPerMinute",
+    COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "avgRedirectsPerMatch",
+    COALESCE(SUM(mp."statRedirects") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "redirectsPerMinute",
+    COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "avgOrbsPerMatch",
+    COALESCE(SUM(mp."statOrbs") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "orbsPerMinute"
+FROM "MatchPlayer" mp
+LEFT JOIN "Match" m ON mp."matchId" = m."id"
+WHERE mp."wasGoalie" = false AND mp."playerId" IS NULL;
+
+    `,
+    []
+  );
+
+  const anonymousForwardStats = anonymousForwardStatsResult[0];
+  const anonymousGoalieStatsResult = await db(
+    `
+    SELECT
+    NULL AS "id",
+    'Anonymous' AS "name",
+    COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
+    COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes",
+    COUNT(mp."matchId") AS "matchesPlayed",
+    COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
+    COALESCE(SUM(mp."statGoals") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "goalsPerMinute",
+    COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
+    COALESCE(SUM(mp."statAssists") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "assistsPerMinute",
+    COALESCE(ROUND(AVG(mp."statSaves")::numeric, 2), 0) AS "avgSavesPerMatch",
+    COALESCE(SUM(mp."statSaves") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "savesPerMinute",
+    COALESCE(ROUND(AVG(mp."statKnockouts")::numeric, 2), 0) AS "avgKOsPerMatch",
+    COALESCE(SUM(mp."statKnockouts") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "knockoutsPerMinute",
+    COALESCE(ROUND(AVG(mp."statDamage")::numeric, 2), 0) AS "avgDamagePerMatch",
+    COALESCE(SUM(mp."statDamage") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "damagePerMinute",
+    COALESCE(ROUND(AVG(mp."statShots")::numeric, 2), 0) AS "avgShotsPerMatch",
+    COALESCE(SUM(mp."statShots") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "shotsPerMinute",
+    COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "avgRedirectsPerMatch",
+    COALESCE(SUM(mp."statRedirects") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "redirectsPerMinute",
+    COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "avgOrbsPerMatch",
+    COALESCE(SUM(mp."statOrbs") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "orbsPerMinute"
+FROM "MatchPlayer" mp
+LEFT JOIN "Match" m ON mp."matchId" = m."id"
+WHERE mp."wasGoalie" = true AND mp."playerId" IS NULL;
+
+    `,
+    []
+  );
+
+  const anonymousGoalieStats = anonymousGoalieStatsResult[0];
 
   const goalieStats = await db(
     `
@@ -580,6 +680,71 @@ export default async function PlayersList() {
               </td>
             </tr>
           ))}
+          {anonymousCombinedStats && (
+            <tr>
+              <td>{anonymousCombinedStats.name}</td>
+              <td>
+                {formatDuration(anonymousCombinedStats.totalPlaytimeInSeconds)}
+              </td>
+              <td>{anonymousCombinedStats.matchesPlayed}</td>
+              <td>
+                {formatDuration(
+                  Number(
+                    (
+                      anonymousCombinedStats.totalPlaytimeInSeconds /
+                      anonymousCombinedStats.matchesPlayed
+                    ).toFixed(0)
+                  )
+                )}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.avgGoalsPerMatch).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.goalsPerMinute).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.avgAssistsPerMatch).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.assistsPerMinute).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.avgSavesPerMatch).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.savesPerMinute).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.avgKOsPerMatch).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.knockoutsPerMinute).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.avgDamagePerMatch).toFixed(0)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.damagePerMinute).toFixed(0)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.avgShotsPerMatch).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.shotsPerMinute).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.avgRedirectsPerMatch).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.redirectsPerMinute).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousCombinedStats.avgOrbsPerMatch).toFixed(2)}
+              </td>
+              <td>{Number(anonymousCombinedStats.orbsPerMinute).toFixed(2)}</td>
+            </tr>
+          )}
         </tbody>
       </table>
 
@@ -762,6 +927,63 @@ export default async function PlayersList() {
               </td>
             </tr>
           ))}
+          {anonymousForwardStats && (
+            <tr>
+              <td>{anonymousForwardStats.name}</td>
+              <td>
+                {formatDuration(anonymousForwardStats.totalPlaytimeInSeconds)}
+              </td>
+              <td>{anonymousForwardStats.matchesPlayed}</td>
+              <td>
+                {formatDuration(
+                  Number(
+                    (
+                      anonymousForwardStats.totalPlaytimeInSeconds /
+                      anonymousForwardStats.matchesPlayed
+                    ).toFixed(0)
+                  )
+                )}
+              </td>
+              <td>
+                {Number(anonymousForwardStats.avgGoalsPerMatch).toFixed(2)}
+              </td>
+              <td>{Number(anonymousForwardStats.goalsPerMinute).toFixed(2)}</td>
+              <td>
+                {Number(anonymousForwardStats.avgAssistsPerMatch).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousForwardStats.assistsPerMinute).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousForwardStats.avgSavesPerMatch).toFixed(2)}
+              </td>
+              <td>{Number(anonymousForwardStats.savesPerMinute).toFixed(2)}</td>
+              <td>{Number(anonymousForwardStats.avgKOsPerMatch).toFixed(2)}</td>
+              <td>
+                {Number(anonymousForwardStats.knockoutsPerMinute).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousForwardStats.avgDamagePerMatch).toFixed(0)}
+              </td>
+              <td>
+                {Number(anonymousForwardStats.damagePerMinute).toFixed(0)}
+              </td>
+              <td>
+                {Number(anonymousForwardStats.avgShotsPerMatch).toFixed(2)}
+              </td>
+              <td>{Number(anonymousForwardStats.shotsPerMinute).toFixed(2)}</td>
+              <td>
+                {Number(anonymousForwardStats.avgRedirectsPerMatch).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousForwardStats.redirectsPerMinute).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousForwardStats.avgOrbsPerMatch).toFixed(2)}
+              </td>
+              <td>{Number(anonymousForwardStats.orbsPerMinute).toFixed(2)}</td>
+            </tr>
+          )}
         </tbody>
       </table>
 
@@ -944,6 +1166,60 @@ export default async function PlayersList() {
               </td>
             </tr>
           ))}
+
+          {anonymousGoalieStats && (
+            <tr>
+              <td>{anonymousGoalieStats.name}</td>
+              <td>
+                {formatDuration(anonymousGoalieStats.totalPlaytimeInSeconds)}
+              </td>
+              <td>{anonymousGoalieStats.matchesPlayed}</td>
+              <td>
+                {formatDuration(
+                  Number(
+                    (
+                      anonymousGoalieStats.totalPlaytimeInSeconds /
+                      anonymousGoalieStats.matchesPlayed
+                    ).toFixed(0)
+                  )
+                )}
+              </td>
+              <td>
+                {Number(anonymousGoalieStats.avgGoalsPerMatch).toFixed(2)}
+              </td>
+              <td>{Number(anonymousGoalieStats.goalsPerMinute).toFixed(2)}</td>
+              <td>
+                {Number(anonymousGoalieStats.avgAssistsPerMatch).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousGoalieStats.assistsPerMinute).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousGoalieStats.avgSavesPerMatch).toFixed(2)}
+              </td>
+              <td>{Number(anonymousGoalieStats.savesPerMinute).toFixed(2)}</td>
+              <td>{Number(anonymousGoalieStats.avgKOsPerMatch).toFixed(2)}</td>
+              <td>
+                {Number(anonymousGoalieStats.knockoutsPerMinute).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousGoalieStats.avgDamagePerMatch).toFixed(0)}
+              </td>
+              <td>{Number(anonymousGoalieStats.damagePerMinute).toFixed(0)}</td>
+              <td>
+                {Number(anonymousGoalieStats.avgShotsPerMatch).toFixed(2)}
+              </td>
+              <td>{Number(anonymousGoalieStats.shotsPerMinute).toFixed(2)}</td>
+              <td>
+                {Number(anonymousGoalieStats.avgRedirectsPerMatch).toFixed(2)}
+              </td>
+              <td>
+                {Number(anonymousGoalieStats.redirectsPerMinute).toFixed(2)}
+              </td>
+              <td>{Number(anonymousGoalieStats.avgOrbsPerMatch).toFixed(2)}</td>
+              <td>{Number(anonymousGoalieStats.orbsPerMinute).toFixed(2)}</td>
+            </tr>
+          )}
         </tbody>
       </table>
 
