@@ -85,6 +85,13 @@ export default async function PlayersList() {
           COUNT(mp."matchId") AS "matchesPlayed",
           COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
           COALESCE(SUM(mp."statGoals") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "goalsPerMinute",
+          COALESCE(
+              ROUND(
+                  (SUM(CASE WHEN m."team1Won" = true AND mp."teamNumber" = 1 THEN 1 
+                            WHEN m."team1Won" = false AND mp."teamNumber" = 2 THEN 1 
+                            ELSE 0 END)::numeric 
+                  / NULLIF(COUNT(mp."matchId"), 0)) * 100, 2), 0
+          ) AS "winRate", 
           COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
           COALESCE(SUM(mp."statAssists") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "assistsPerMinute",
           COALESCE(ROUND(AVG(mp."statSaves")::numeric, 2), 0) AS "avgSavesPerMatch",
@@ -102,12 +109,14 @@ export default async function PlayersList() {
       FROM "Player" p
       LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
       LEFT JOIN player_playtime playtime ON p."id" = playtime."id"
+      LEFT JOIN "Match" m ON mp."matchId" = m."id"  -- Added LEFT JOIN for "Match" table here
       WHERE p."deletedAt" IS NULL
       GROUP BY p."id", p."name", playtime."totalPlaytimeInSeconds", playtime."totalPlaytimeInMinutes"
   ),
   highlighted_combined_stats AS (
       SELECT 
           *,
+          CASE WHEN "winRate" = MAX("winRate") OVER () THEN TRUE ELSE FALSE END AS "isHighestWinRate",
           CASE WHEN "avgGoalsPerMatch" = MAX("avgGoalsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMatch",
           CASE WHEN "goalsPerMinute" = MAX("goalsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMinute",
           CASE WHEN "avgAssistsPerMatch" = MAX("avgAssistsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMatch",
@@ -150,6 +159,7 @@ SELECT
 FROM highlighted_combined_stats hcs
 LEFT JOIN top_strikers ts ON hcs."id" = ts."id"
 ORDER BY "matchesPlayed" DESC;
+
   
   
     `,
@@ -177,6 +187,13 @@ forward_stats AS (
         playtime."totalPlaytimeInSeconds",
         playtime."totalPlaytimeInMinutes",
         COUNT(mp."matchId") AS "matchesPlayed",
+        COALESCE(
+          ROUND(
+              (SUM(CASE WHEN m."team1Won" = true AND mp."teamNumber" = 1 THEN 1 
+                        WHEN m."team1Won" = false AND mp."teamNumber" = 2 THEN 1 
+                        ELSE 0 END)::numeric 
+              / NULLIF(COUNT(mp."matchId"), 0)) * 100, 2), 0
+      ) AS "winRate", 
         COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
         COALESCE(SUM(mp."statGoals") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "goalsPerMinute",
         COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
@@ -196,6 +213,7 @@ forward_stats AS (
     FROM "Player" p
     LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
     LEFT JOIN player_playtime playtime ON p."id" = playtime."id"
+    LEFT JOIN "Match" m ON mp."matchId" = m."id"  -- Added LEFT JOIN for "Match" table here
     WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = false
     GROUP BY p."id", p."name", playtime."totalPlaytimeInSeconds", playtime."totalPlaytimeInMinutes"
 ),
@@ -220,6 +238,7 @@ highlighted_forward_stats AS (
     SELECT 
         fs.*,
         ats."topStrikers",
+        CASE WHEN "winRate" = MAX("winRate") OVER () THEN TRUE ELSE FALSE END AS "isHighestWinRate",
         CASE WHEN "avgGoalsPerMatch" = MAX("avgGoalsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMatch",
         CASE WHEN "goalsPerMinute" = MAX("goalsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMinute",
         CASE WHEN "avgAssistsPerMatch" = MAX("avgAssistsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMatch",
@@ -268,6 +287,13 @@ SELECT
     COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
     COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes",
     COUNT(mp."matchId") AS "matchesPlayed",
+    COALESCE(
+      ROUND(
+          (SUM(CASE WHEN m."team1Won" = true AND mp."teamNumber" = 1 THEN 1 
+                    WHEN m."team1Won" = false AND mp."teamNumber" = 2 THEN 1 
+                    ELSE 0 END)::numeric 
+          / NULLIF(COUNT(mp."matchId"), 0)) * 100, 2), 0
+  ) AS "winRate", 
     COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
     COALESCE(SUM(mp."statGoals") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "goalsPerMinute",
     COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
@@ -302,6 +328,13 @@ WHERE mp."playerId" IS NULL;
     COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
     COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes",
     COUNT(mp."matchId") AS "matchesPlayed",
+    COALESCE(
+      ROUND(
+          (SUM(CASE WHEN m."team1Won" = true AND mp."teamNumber" = 1 THEN 1 
+                    WHEN m."team1Won" = false AND mp."teamNumber" = 2 THEN 1 
+                    ELSE 0 END)::numeric 
+          / NULLIF(COUNT(mp."matchId"), 0)) * 100, 2), 0
+  ) AS "winRate", 
     COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
     COALESCE(SUM(mp."statGoals") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "goalsPerMinute",
     COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
@@ -348,6 +381,13 @@ WHERE mp."wasGoalie" = false AND mp."playerId" IS NULL;
     COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
     COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes",
     COUNT(mp."matchId") AS "matchesPlayed",
+    COALESCE(
+      ROUND(
+          (SUM(CASE WHEN m."team1Won" = true AND mp."teamNumber" = 1 THEN 1 
+                    WHEN m."team1Won" = false AND mp."teamNumber" = 2 THEN 1 
+                    ELSE 0 END)::numeric 
+          / NULLIF(COUNT(mp."matchId"), 0)) * 100, 2), 0
+  ) AS "winRate", 
     COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
     COALESCE(SUM(mp."statGoals") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "goalsPerMinute",
     COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
@@ -407,6 +447,13 @@ goalie_stats AS (
         playtime."totalPlaytimeInSeconds",
         playtime."totalPlaytimeInMinutes",
         COUNT(mp."matchId") AS "matchesPlayed",
+        COALESCE(
+          ROUND(
+              (SUM(CASE WHEN m."team1Won" = true AND mp."teamNumber" = 1 THEN 1 
+                        WHEN m."team1Won" = false AND mp."teamNumber" = 2 THEN 1 
+                        ELSE 0 END)::numeric 
+              / NULLIF(COUNT(mp."matchId"), 0)) * 100, 2), 0
+      ) AS "winRate", 
         COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
         COALESCE(SUM(mp."statGoals") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "goalsPerMinute",
         COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
@@ -437,12 +484,14 @@ goalie_stats AS (
     FROM "Player" p
     LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
     LEFT JOIN player_playtime playtime ON p."id" = playtime."id"
+    LEFT JOIN "Match" m ON mp."matchId" = m."id"  -- Added LEFT JOIN for "Match" table here
     WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = true
     GROUP BY p."id", p."name", playtime."totalPlaytimeInSeconds", playtime."totalPlaytimeInMinutes"
 ),
 highlighted_goalie_stats AS (
     SELECT 
         *,
+        CASE WHEN "winRate" = MAX("winRate") OVER () THEN TRUE ELSE FALSE END AS "isHighestWinRate",
         CASE WHEN "avgGoalsPerMatch" = MAX("avgGoalsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMatch",
         CASE WHEN "goalsPerMinute" = MAX("goalsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMinute",
         CASE WHEN "avgAssistsPerMatch" = MAX("avgAssistsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMatch",
@@ -598,6 +647,7 @@ ORDER BY "matchesPlayed" DESC;
             <th>Playtime</th>
             <th>Matches</th>
             <th>Length</th>
+            <th>Win Rate (%)</th>
             <th colSpan={2}>
               <center>Goals</center>
             </th>
@@ -624,6 +674,7 @@ ORDER BY "matchesPlayed" DESC;
             </th>
           </tr>
           <tr>
+            <th></th>
             <th></th>
             <th></th>
             <th></th>
@@ -672,6 +723,9 @@ ORDER BY "matchesPlayed" DESC;
                     ).toFixed(0)
                   )
                 )}
+              </td>
+              <td className={player.isHighestWinRate ? styles.highlight : ""}>
+                {Number(player.winRate).toFixed(2)}%
               </td>
               <td
                 className={
@@ -811,6 +865,7 @@ ORDER BY "matchesPlayed" DESC;
                   )
                 )}
               </td>
+              <td>{Number(anonymousCombinedStats.winRate).toFixed(2)}%</td>
               <td>
                 {Number(anonymousCombinedStats.avgGoalsPerMatch).toFixed(2)}
               </td>
@@ -874,6 +929,7 @@ ORDER BY "matchesPlayed" DESC;
             <th>Playtime</th>
             <th>Matches</th>
             <th>Length</th>
+            <th>Win Rate (%)</th>
             <th colSpan={2}>
               <center>Goals</center>
             </th>
@@ -900,7 +956,7 @@ ORDER BY "matchesPlayed" DESC;
             </th>
           </tr>
           <tr>
-            <th colSpan={5}></th>
+            <th colSpan={6}></th>
             <th>Avg</th>
             <th>pM</th>
             <th>Avg</th>
@@ -944,6 +1000,9 @@ ORDER BY "matchesPlayed" DESC;
                     ).toFixed(0)
                   )
                 )}
+              </td>
+              <td className={player.isHighestWinRate ? styles.highlight : ""}>
+                {Number(player.winRate).toFixed(2)}%
               </td>
               <td
                 className={
@@ -1083,6 +1142,7 @@ ORDER BY "matchesPlayed" DESC;
                   )
                 )}
               </td>
+              <td>{Number(anonymousForwardStats.winRate).toFixed(2)}%</td>
               <td>
                 {Number(anonymousForwardStats.avgGoalsPerMatch).toFixed(2)}
               </td>
@@ -1138,6 +1198,7 @@ ORDER BY "matchesPlayed" DESC;
             <th>Playtime</th>
             <th>Matches</th>
             <th>Length</th>
+            <th>Win Rate (%)</th>
             <th colSpan={2}>
               <center>Goals</center>
             </th>
@@ -1164,7 +1225,7 @@ ORDER BY "matchesPlayed" DESC;
             </th>
           </tr>
           <tr>
-            <th colSpan={5}></th>
+            <th colSpan={6}></th>
             <th>Avg</th>
             <th>pM</th>
             <th>Avg</th>
@@ -1208,6 +1269,9 @@ ORDER BY "matchesPlayed" DESC;
                     ).toFixed(0)
                   )
                 )}
+              </td>
+              <td className={player.isHighestWinRate ? styles.highlight : ""}>
+                {Number(player.winRate).toFixed(2)}%
               </td>
               <td
                 className={
@@ -1348,6 +1412,7 @@ ORDER BY "matchesPlayed" DESC;
                   )
                 )}
               </td>
+              <td>{Number(anonymousGoalieStats.winRate).toFixed(2)}%</td>
               <td>
                 {Number(anonymousGoalieStats.avgGoalsPerMatch).toFixed(2)}
               </td>
