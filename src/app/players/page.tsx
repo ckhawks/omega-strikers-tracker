@@ -125,9 +125,31 @@ export default async function PlayersList() {
           CASE WHEN "avgOrbsPerMatch" = MAX("avgOrbsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMatch",
           CASE WHEN "orbsPerMinute" = MAX("orbsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMinute"
       FROM combined_stats
-  )
-  SELECT * FROM highlighted_combined_stats
-  ORDER BY "matchesPlayed" DESC;
+  ),
+top_strikers AS (
+  SELECT 
+    sub."id",
+    ARRAY_AGG(sub."striker") AS "topStrikers"
+  FROM (
+    SELECT 
+      p."id",
+      mp."striker",
+      COUNT(mp."matchId") AS "matchCount",
+      ROW_NUMBER() OVER (PARTITION BY p."id" ORDER BY COUNT(mp."matchId") DESC) AS rank
+    FROM "Player" p
+    LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+    WHERE p."deletedAt" IS NULL
+    GROUP BY p."id", mp."striker"
+  ) AS sub
+  WHERE sub.rank <= 3
+  GROUP BY sub."id"
+)
+SELECT 
+  hcs.*, 
+  ts."topStrikers"
+FROM highlighted_combined_stats hcs
+LEFT JOIN top_strikers ts ON hcs."id" = ts."id"
+ORDER BY "matchesPlayed" DESC;
   
   
     `,
@@ -137,76 +159,110 @@ export default async function PlayersList() {
   const forwardStats = await db(
     `
     WITH player_playtime AS (
-      SELECT
-          p."id",
-          p."name",
-          COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
-          COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes"
-      FROM "Player" p
-      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
-      LEFT JOIN "Match" m ON mp."matchId" = m."id"
-      WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = false
-      GROUP BY p."id", p."name"
-  ),
-  forward_stats AS (
-      SELECT
-          p."id",
-          p."name",
-          playtime."totalPlaytimeInSeconds",
-          playtime."totalPlaytimeInMinutes",
-          COUNT(mp."matchId") AS "matchesPlayed",
-          COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
-          COALESCE(SUM(mp."statGoals") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "goalsPerMinute",
-          COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
-          COALESCE(SUM(mp."statAssists") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "assistsPerMinute",
-          COALESCE(ROUND(AVG(mp."statSaves")::numeric, 2), 0) AS "avgSavesPerMatch",
-          COALESCE(SUM(mp."statSaves") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "savesPerMinute",
-          COALESCE(ROUND(AVG(mp."statKnockouts")::numeric, 2), 0) AS "avgKOsPerMatch",
-          COALESCE(SUM(mp."statKnockouts") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "knockoutsPerMinute",
-          COALESCE(ROUND(AVG(mp."statDamage")::numeric, 2), 0) AS "avgDamagePerMatch",
-          COALESCE(SUM(mp."statDamage") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "damagePerMinute",
-          COALESCE(ROUND(AVG(mp."statShots")::numeric, 2), 0) AS "avgShotsPerMatch",
-          COALESCE(SUM(mp."statShots") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "shotsPerMinute",
-          COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "avgRedirectsPerMatch",
-          COALESCE(SUM(mp."statRedirects") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "redirectsPerMinute",
-          COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "avgOrbsPerMatch",
-          COALESCE(SUM(mp."statOrbs") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "orbsPerMinute"
-      FROM "Player" p
-      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
-      LEFT JOIN player_playtime playtime ON p."id" = playtime."id"
-      WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = false
-      GROUP BY p."id", p."name", playtime."totalPlaytimeInSeconds", playtime."totalPlaytimeInMinutes"
-  ),
-  highlighted_forward_stats AS (
-      SELECT 
-          *,
-          CASE WHEN "avgGoalsPerMatch" = MAX("avgGoalsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMatch",
-          CASE WHEN "goalsPerMinute" = MAX("goalsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMinute",
-          CASE WHEN "avgAssistsPerMatch" = MAX("avgAssistsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMatch",
-          CASE WHEN "assistsPerMinute" = MAX("assistsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMinute",
-          CASE WHEN "avgSavesPerMatch" = MAX("avgSavesPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMatch",
-          CASE WHEN "savesPerMinute" = MAX("savesPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMinute",
-          CASE WHEN "avgKOsPerMatch" = MAX("avgKOsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMatch",
-          CASE WHEN "knockoutsPerMinute" = MAX("knockoutsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMinute",
-          CASE WHEN "avgDamagePerMatch" = MAX("avgDamagePerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMatch",
-          CASE WHEN "damagePerMinute" = MAX("damagePerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMinute",
-          CASE WHEN "avgShotsPerMatch" = MAX("avgShotsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMatch",
-          CASE WHEN "shotsPerMinute" = MAX("shotsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMinute",
-          CASE WHEN "avgRedirectsPerMatch" = MAX("avgRedirectsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMatch",
-          CASE WHEN "redirectsPerMinute" = MAX("redirectsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMinute",
-          CASE WHEN "avgOrbsPerMatch" = MAX("avgOrbsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMatch",
-          CASE WHEN "orbsPerMinute" = MAX("orbsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMinute"
-      FROM forward_stats
-  )
-  SELECT * FROM highlighted_forward_stats
-  ORDER BY "matchesPlayed" DESC;
+    SELECT
+        p."id",
+        p."name",
+        COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
+        COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes"
+    FROM "Player" p
+    LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+    LEFT JOIN "Match" m ON mp."matchId" = m."id"
+    WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = false
+    GROUP BY p."id", p."name"
+),
+forward_stats AS (
+    SELECT
+        p."id",
+        p."name",
+        playtime."totalPlaytimeInSeconds",
+        playtime."totalPlaytimeInMinutes",
+        COUNT(mp."matchId") AS "matchesPlayed",
+        COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
+        COALESCE(SUM(mp."statGoals") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "goalsPerMinute",
+        COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
+        COALESCE(SUM(mp."statAssists") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "assistsPerMinute",
+        COALESCE(ROUND(AVG(mp."statSaves")::numeric, 2), 0) AS "avgSavesPerMatch",
+        COALESCE(SUM(mp."statSaves") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "savesPerMinute",
+        COALESCE(ROUND(AVG(mp."statKnockouts")::numeric, 2), 0) AS "avgKOsPerMatch",
+        COALESCE(SUM(mp."statKnockouts") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "knockoutsPerMinute",
+        COALESCE(ROUND(AVG(mp."statDamage")::numeric, 2), 0) AS "avgDamagePerMatch",
+        COALESCE(SUM(mp."statDamage") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "damagePerMinute",
+        COALESCE(ROUND(AVG(mp."statShots")::numeric, 2), 0) AS "avgShotsPerMatch",
+        COALESCE(SUM(mp."statShots") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "shotsPerMinute",
+        COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "avgRedirectsPerMatch",
+        COALESCE(SUM(mp."statRedirects") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "redirectsPerMinute",
+        COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "avgOrbsPerMatch",
+        COALESCE(SUM(mp."statOrbs") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "orbsPerMinute"
+    FROM "Player" p
+    LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+    LEFT JOIN player_playtime playtime ON p."id" = playtime."id"
+    WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = false
+    GROUP BY p."id", p."name", playtime."totalPlaytimeInSeconds", playtime."totalPlaytimeInMinutes"
+),
+player_top_strikers AS (
+    SELECT
+        mp."playerId" AS "id",
+        mp."striker",
+        COUNT(mp."matchId") AS "matchCount",
+        ROW_NUMBER() OVER (PARTITION BY mp."playerId" ORDER BY COUNT(mp."matchId") DESC) AS rank
+    FROM "MatchPlayer" mp
+    WHERE mp."wasGoalie" = false
+    GROUP BY mp."playerId", mp."striker"
+),
+aggregated_top_strikers AS (
+    SELECT
+        "id",
+        ARRAY_AGG("striker") FILTER (WHERE rank <= 3) AS "topStrikers"
+    FROM player_top_strikers
+    GROUP BY "id"
+),
+highlighted_forward_stats AS (
+    SELECT 
+        fs.*,
+        ats."topStrikers",
+        CASE WHEN "avgGoalsPerMatch" = MAX("avgGoalsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMatch",
+        CASE WHEN "goalsPerMinute" = MAX("goalsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMinute",
+        CASE WHEN "avgAssistsPerMatch" = MAX("avgAssistsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMatch",
+        CASE WHEN "assistsPerMinute" = MAX("assistsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMinute",
+        CASE WHEN "avgSavesPerMatch" = MAX("avgSavesPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMatch",
+        CASE WHEN "savesPerMinute" = MAX("savesPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMinute",
+        CASE WHEN "avgKOsPerMatch" = MAX("avgKOsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMatch",
+        CASE WHEN "knockoutsPerMinute" = MAX("knockoutsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMinute",
+        CASE WHEN "avgDamagePerMatch" = MAX("avgDamagePerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMatch",
+        CASE WHEN "damagePerMinute" = MAX("damagePerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMinute",
+        CASE WHEN "avgShotsPerMatch" = MAX("avgShotsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMatch",
+        CASE WHEN "shotsPerMinute" = MAX("shotsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMinute",
+        CASE WHEN "avgRedirectsPerMatch" = MAX("avgRedirectsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMatch",
+        CASE WHEN "redirectsPerMinute" = MAX("redirectsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMinute",
+        CASE WHEN "avgOrbsPerMatch" = MAX("avgOrbsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMatch",
+        CASE WHEN "orbsPerMinute" = MAX("orbsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMinute"
+    FROM forward_stats fs
+    LEFT JOIN aggregated_top_strikers ats ON fs."id" = ats."id"
+)
+SELECT * FROM highlighted_forward_stats
+ORDER BY "matchesPlayed" DESC;
+
   `,
     []
   );
 
   const anonymousCombinedStatsResult = await db(
     `
-    SELECT
+    WITH anonymous_top_strikers AS (
+    SELECT 
+        mp."striker",
+        COUNT(mp."matchId") AS "matchCount",
+        ROW_NUMBER() OVER (ORDER BY COUNT(mp."matchId") DESC) AS rank
+    FROM "MatchPlayer" mp
+    WHERE mp."playerId" IS NULL
+    GROUP BY mp."striker"
+),
+aggregated_top_strikers AS (
+    SELECT ARRAY_AGG("striker") AS "topStrikers"
+    FROM anonymous_top_strikers
+    WHERE rank <= 3
+)
+SELECT
     NULL AS "id",
     'Anonymous' AS "name",
     COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
@@ -227,11 +283,11 @@ export default async function PlayersList() {
     COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "avgRedirectsPerMatch",
     COALESCE(SUM(mp."statRedirects") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "redirectsPerMinute",
     COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "avgOrbsPerMatch",
-    COALESCE(SUM(mp."statOrbs") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "orbsPerMinute"
+    COALESCE(SUM(mp."statOrbs") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "orbsPerMinute",
+    (SELECT "topStrikers" FROM aggregated_top_strikers) AS "topStrikers"
 FROM "MatchPlayer" mp
 LEFT JOIN "Match" m ON mp."matchId" = m."id"
 WHERE mp."playerId" IS NULL;
-
     `,
     []
   );
@@ -261,10 +317,23 @@ WHERE mp."playerId" IS NULL;
     COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "avgRedirectsPerMatch",
     COALESCE(SUM(mp."statRedirects") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "redirectsPerMinute",
     COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "avgOrbsPerMatch",
-    COALESCE(SUM(mp."statOrbs") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "orbsPerMinute"
+    COALESCE(SUM(mp."statOrbs") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "orbsPerMinute",
+    -- Top strikers for anonymous forwards
+    (
+        SELECT ARRAY_AGG(sub."striker") 
+        FROM (
+            SELECT mp."striker", COUNT(mp."matchId") AS "matchCount"
+            FROM "MatchPlayer" mp
+            WHERE mp."wasGoalie" = false AND mp."playerId" IS NULL
+            GROUP BY mp."striker"
+            ORDER BY "matchCount" DESC
+            LIMIT 3
+        ) AS sub
+    ) AS "topStrikers"
 FROM "MatchPlayer" mp
 LEFT JOIN "Match" m ON mp."matchId" = m."id"
 WHERE mp."wasGoalie" = false AND mp."playerId" IS NULL;
+
 
     `,
     []
@@ -294,7 +363,19 @@ WHERE mp."wasGoalie" = false AND mp."playerId" IS NULL;
     COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "avgRedirectsPerMatch",
     COALESCE(SUM(mp."statRedirects") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "redirectsPerMinute",
     COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "avgOrbsPerMatch",
-    COALESCE(SUM(mp."statOrbs") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "orbsPerMinute"
+    COALESCE(SUM(mp."statOrbs") / NULLIF(SUM(m."duration") / 60.0, 0), 0) AS "orbsPerMinute",
+    -- Top strikers for anonymous forwards
+    (
+        SELECT ARRAY_AGG(sub."striker") 
+        FROM (
+            SELECT mp."striker", COUNT(mp."matchId") AS "matchCount"
+            FROM "MatchPlayer" mp
+            WHERE mp."wasGoalie" = true AND mp."playerId" IS NULL
+            GROUP BY mp."striker"
+            ORDER BY "matchCount" DESC
+            LIMIT 3
+        ) AS sub
+    ) AS "topStrikers"
 FROM "MatchPlayer" mp
 LEFT JOIN "Match" m ON mp."matchId" = m."id"
 WHERE mp."wasGoalie" = true AND mp."playerId" IS NULL;
@@ -308,69 +389,81 @@ WHERE mp."wasGoalie" = true AND mp."playerId" IS NULL;
   const goalieStats = await db(
     `
     WITH player_playtime AS (
-      SELECT
-          p."id",
-          p."name",
-          COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
-          COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes"
-      FROM "Player" p
-      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
-      LEFT JOIN "Match" m ON mp."matchId" = m."id"
-      WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = true
-      GROUP BY p."id", p."name"
-  ),
-  forward_stats AS (
-      SELECT
-          p."id",
-          p."name",
-          playtime."totalPlaytimeInSeconds",
-          playtime."totalPlaytimeInMinutes",
-          COUNT(mp."matchId") AS "matchesPlayed",
-          COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
-          COALESCE(SUM(mp."statGoals") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "goalsPerMinute",
-          COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
-          COALESCE(SUM(mp."statAssists") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "assistsPerMinute",
-          COALESCE(ROUND(AVG(mp."statSaves")::numeric, 2), 0) AS "avgSavesPerMatch",
-          COALESCE(SUM(mp."statSaves") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "savesPerMinute",
-          COALESCE(ROUND(AVG(mp."statKnockouts")::numeric, 2), 0) AS "avgKOsPerMatch",
-          COALESCE(SUM(mp."statKnockouts") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "knockoutsPerMinute",
-          COALESCE(ROUND(AVG(mp."statDamage")::numeric, 2), 0) AS "avgDamagePerMatch",
-          COALESCE(SUM(mp."statDamage") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "damagePerMinute",
-          COALESCE(ROUND(AVG(mp."statShots")::numeric, 2), 0) AS "avgShotsPerMatch",
-          COALESCE(SUM(mp."statShots") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "shotsPerMinute",
-          COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "avgRedirectsPerMatch",
-          COALESCE(SUM(mp."statRedirects") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "redirectsPerMinute",
-          COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "avgOrbsPerMatch",
-          COALESCE(SUM(mp."statOrbs") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "orbsPerMinute"
-      FROM "Player" p
-      LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
-      LEFT JOIN player_playtime playtime ON p."id" = playtime."id"
-      WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = true
-      GROUP BY p."id", p."name", playtime."totalPlaytimeInSeconds", playtime."totalPlaytimeInMinutes"
-  ),
-  highlighted_forward_stats AS (
-      SELECT 
-          *,
-          CASE WHEN "avgGoalsPerMatch" = MAX("avgGoalsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMatch",
-          CASE WHEN "goalsPerMinute" = MAX("goalsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMinute",
-          CASE WHEN "avgAssistsPerMatch" = MAX("avgAssistsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMatch",
-          CASE WHEN "assistsPerMinute" = MAX("assistsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMinute",
-          CASE WHEN "avgSavesPerMatch" = MAX("avgSavesPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMatch",
-          CASE WHEN "savesPerMinute" = MAX("savesPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMinute",
-          CASE WHEN "avgKOsPerMatch" = MAX("avgKOsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMatch",
-          CASE WHEN "knockoutsPerMinute" = MAX("knockoutsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMinute",
-          CASE WHEN "avgDamagePerMatch" = MAX("avgDamagePerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMatch",
-          CASE WHEN "damagePerMinute" = MAX("damagePerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMinute",
-          CASE WHEN "avgShotsPerMatch" = MAX("avgShotsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMatch",
-          CASE WHEN "shotsPerMinute" = MAX("shotsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMinute",
-          CASE WHEN "avgRedirectsPerMatch" = MAX("avgRedirectsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMatch",
-          CASE WHEN "redirectsPerMinute" = MAX("redirectsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMinute",
-          CASE WHEN "avgOrbsPerMatch" = MAX("avgOrbsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMatch",
-          CASE WHEN "orbsPerMinute" = MAX("orbsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMinute"
-      FROM forward_stats
-  )
-  SELECT * FROM highlighted_forward_stats
-  ORDER BY "matchesPlayed" DESC;
+    SELECT
+        p."id",
+        p."name",
+        COALESCE(SUM(m."duration"), 0) AS "totalPlaytimeInSeconds",
+        COALESCE(SUM(m."duration") / 60.0, 0) AS "totalPlaytimeInMinutes"
+    FROM "Player" p
+    LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+    LEFT JOIN "Match" m ON mp."matchId" = m."id"
+    WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = true
+    GROUP BY p."id", p."name"
+),
+goalie_stats AS (
+    SELECT
+        p."id",
+        p."name",
+        playtime."totalPlaytimeInSeconds",
+        playtime."totalPlaytimeInMinutes",
+        COUNT(mp."matchId") AS "matchesPlayed",
+        COALESCE(ROUND(AVG(mp."statGoals")::numeric, 2), 0) AS "avgGoalsPerMatch",
+        COALESCE(SUM(mp."statGoals") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "goalsPerMinute",
+        COALESCE(ROUND(AVG(mp."statAssists")::numeric, 2), 0) AS "avgAssistsPerMatch",
+        COALESCE(SUM(mp."statAssists") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "assistsPerMinute",
+        COALESCE(ROUND(AVG(mp."statSaves")::numeric, 2), 0) AS "avgSavesPerMatch",
+        COALESCE(SUM(mp."statSaves") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "savesPerMinute",
+        COALESCE(ROUND(AVG(mp."statKnockouts")::numeric, 2), 0) AS "avgKOsPerMatch",
+        COALESCE(SUM(mp."statKnockouts") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "knockoutsPerMinute",
+        COALESCE(ROUND(AVG(mp."statDamage")::numeric, 2), 0) AS "avgDamagePerMatch",
+        COALESCE(SUM(mp."statDamage") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "damagePerMinute",
+        COALESCE(ROUND(AVG(mp."statShots")::numeric, 2), 0) AS "avgShotsPerMatch",
+        COALESCE(SUM(mp."statShots") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "shotsPerMinute",
+        COALESCE(ROUND(AVG(mp."statRedirects")::numeric, 2), 0) AS "avgRedirectsPerMatch",
+        COALESCE(SUM(mp."statRedirects") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "redirectsPerMinute",
+        COALESCE(ROUND(AVG(mp."statOrbs")::numeric, 2), 0) AS "avgOrbsPerMatch",
+        COALESCE(SUM(mp."statOrbs") / NULLIF(playtime."totalPlaytimeInMinutes", 0), 0) AS "orbsPerMinute",
+        (
+            SELECT ARRAY_AGG(sub."striker")
+            FROM (
+                SELECT mp."striker", COUNT(mp."matchId") AS "matchCount"
+                FROM "MatchPlayer" mp
+                WHERE mp."wasGoalie" = true AND mp."playerId" = p."id"
+                GROUP BY mp."striker"
+                ORDER BY "matchCount" DESC
+                LIMIT 3
+            ) AS sub
+        ) AS "topStrikers"
+    FROM "Player" p
+    LEFT JOIN "MatchPlayer" mp ON p."id" = mp."playerId"
+    LEFT JOIN player_playtime playtime ON p."id" = playtime."id"
+    WHERE p."deletedAt" IS NULL AND mp."wasGoalie" = true
+    GROUP BY p."id", p."name", playtime."totalPlaytimeInSeconds", playtime."totalPlaytimeInMinutes"
+),
+highlighted_goalie_stats AS (
+    SELECT 
+        *,
+        CASE WHEN "avgGoalsPerMatch" = MAX("avgGoalsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMatch",
+        CASE WHEN "goalsPerMinute" = MAX("goalsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestGoalsPerMinute",
+        CASE WHEN "avgAssistsPerMatch" = MAX("avgAssistsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMatch",
+        CASE WHEN "assistsPerMinute" = MAX("assistsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestAssistsPerMinute",
+        CASE WHEN "avgSavesPerMatch" = MAX("avgSavesPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMatch",
+        CASE WHEN "savesPerMinute" = MAX("savesPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestSavesPerMinute",
+        CASE WHEN "avgKOsPerMatch" = MAX("avgKOsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMatch",
+        CASE WHEN "knockoutsPerMinute" = MAX("knockoutsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestKOsPerMinute",
+        CASE WHEN "avgDamagePerMatch" = MAX("avgDamagePerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMatch",
+        CASE WHEN "damagePerMinute" = MAX("damagePerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestDamagePerMinute",
+        CASE WHEN "avgShotsPerMatch" = MAX("avgShotsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMatch",
+        CASE WHEN "shotsPerMinute" = MAX("shotsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestShotsPerMinute",
+        CASE WHEN "avgRedirectsPerMatch" = MAX("avgRedirectsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMatch",
+        CASE WHEN "redirectsPerMinute" = MAX("redirectsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestRedirectsPerMinute",
+        CASE WHEN "avgOrbsPerMatch" = MAX("avgOrbsPerMatch") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMatch",
+        CASE WHEN "orbsPerMinute" = MAX("orbsPerMinute") OVER () THEN TRUE ELSE FALSE END AS "isHighestOrbsPerMinute"
+    FROM goalie_stats
+)
+SELECT * FROM highlighted_goalie_stats
+ORDER BY "matchesPlayed" DESC;
+
   
     `
   );
@@ -506,6 +599,7 @@ WHERE mp."wasGoalie" = true AND mp."playerId" IS NULL;
         <thead>
           <tr>
             <th>Player</th>
+            <th>Strikers</th>
             <th>Playtime</th>
             <th>Matches</th>
             <th>Length</th>
@@ -539,28 +633,43 @@ WHERE mp."wasGoalie" = true AND mp."playerId" IS NULL;
             <th></th>
             <th></th>
             <th></th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
+            <th></th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
           </tr>
         </thead>
         <tbody>
           {combinedStats.map((player, index) => (
             <tr key={index}>
               <td>{player.name}</td>
+              <td>
+                <div style={{ display: "flex", gap: "4px" }}>
+                  {player.topStrikers?.map((striker: any, i: number) => (
+                    <img
+                      key={i}
+                      // @ts-ignore
+                      src={`/strikers/${STRIKER_IMAGES[striker]}`} // Adjust path as needed
+                      alt={striker}
+                      width={24}
+                      style={{ borderRadius: "4px" }}
+                    />
+                  ))}
+                </div>
+              </td>
               <td>{formatDuration(player.totalPlaytimeInSeconds)}</td>
               <td>{player.matchesPlayed}</td>
               <td>
@@ -684,6 +793,22 @@ WHERE mp."wasGoalie" = true AND mp."playerId" IS NULL;
             <tr>
               <td>{anonymousCombinedStats.name}</td>
               <td>
+                <div style={{ display: "flex", gap: "4px" }}>
+                  {anonymousCombinedStats.topStrikers?.map(
+                    (striker: any, i: number) => (
+                      <img
+                        key={i}
+                        // @ts-ignore
+                        src={`/strikers/${STRIKER_IMAGES[striker]}`} // Adjust path as needed
+                        alt={striker}
+                        width={24}
+                        style={{ borderRadius: "4px" }}
+                      />
+                    )
+                  )}
+                </div>
+              </td>
+              <td>
                 {formatDuration(anonymousCombinedStats.totalPlaytimeInSeconds)}
               </td>
               <td>{anonymousCombinedStats.matchesPlayed}</td>
@@ -756,6 +881,7 @@ WHERE mp."wasGoalie" = true AND mp."playerId" IS NULL;
         <thead>
           <tr>
             <th>Player</th>
+            <th>Strikers</th>
             <th>Playtime</th>
             <th>Matches</th>
             <th>Length</th>
@@ -785,29 +911,43 @@ WHERE mp."wasGoalie" = true AND mp."playerId" IS NULL;
             </th>
           </tr>
           <tr>
-            <th colSpan={4}></th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
+            <th colSpan={5}></th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
           </tr>
         </thead>
         <tbody>
           {forwardStats.map((player, index) => (
             <tr key={index}>
               <td>{player.name}</td>
+              <td>
+                <div style={{ display: "flex", gap: "4px" }}>
+                  {player.topStrikers?.map((striker: any, i: number) => (
+                    <img
+                      key={i}
+                      // @ts-ignore
+                      src={`/strikers/${STRIKER_IMAGES[striker]}`} // Adjust path as needed
+                      alt={striker}
+                      width={24}
+                      style={{ borderRadius: "4px" }}
+                    />
+                  ))}
+                </div>
+              </td>
               <td>{formatDuration(player.totalPlaytimeInSeconds)}</td>
               <td>{player.matchesPlayed}</td>
               <td>
@@ -931,6 +1071,22 @@ WHERE mp."wasGoalie" = true AND mp."playerId" IS NULL;
             <tr>
               <td>{anonymousForwardStats.name}</td>
               <td>
+                <div style={{ display: "flex", gap: "4px" }}>
+                  {anonymousForwardStats.topStrikers?.map(
+                    (striker: any, i: number) => (
+                      <img
+                        key={i}
+                        // @ts-ignore
+                        src={`/strikers/${STRIKER_IMAGES[striker]}`} // Adjust path as needed
+                        alt={striker}
+                        width={24}
+                        style={{ borderRadius: "4px" }}
+                      />
+                    )
+                  )}
+                </div>
+              </td>
+              <td>
                 {formatDuration(anonymousForwardStats.totalPlaytimeInSeconds)}
               </td>
               <td>{anonymousForwardStats.matchesPlayed}</td>
@@ -995,6 +1151,7 @@ WHERE mp."wasGoalie" = true AND mp."playerId" IS NULL;
         <thead>
           <tr>
             <th>Player</th>
+            <th>Strikers</th>
             <th>Playtime</th>
             <th>Matches</th>
             <th>Length</th>
@@ -1024,29 +1181,43 @@ WHERE mp."wasGoalie" = true AND mp."playerId" IS NULL;
             </th>
           </tr>
           <tr>
-            <th colSpan={4}></th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
-            <th>Per Match</th>
-            <th>Per Minute</th>
+            <th colSpan={5}></th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
+            <th>Avg</th>
+            <th>pM</th>
           </tr>
         </thead>
         <tbody>
           {goalieStats.map((player, index) => (
             <tr key={index}>
               <td>{player.name}</td>
+              <td>
+                <div style={{ display: "flex", gap: "4px" }}>
+                  {player.topStrikers?.map((striker: any, i: number) => (
+                    <img
+                      key={i}
+                      // @ts-ignore
+                      src={`/strikers/${STRIKER_IMAGES[striker]}`} // Adjust path as needed
+                      alt={striker}
+                      width={24}
+                      style={{ borderRadius: "4px" }}
+                    />
+                  ))}
+                </div>
+              </td>
               <td>{formatDuration(player.totalPlaytimeInSeconds)}</td>
               <td>{player.matchesPlayed}</td>
               <td>
@@ -1170,6 +1341,22 @@ WHERE mp."wasGoalie" = true AND mp."playerId" IS NULL;
           {anonymousGoalieStats && (
             <tr>
               <td>{anonymousGoalieStats.name}</td>
+              <td>
+                <div style={{ display: "flex", gap: "4px" }}>
+                  {anonymousGoalieStats.topStrikers?.map(
+                    (striker: any, i: number) => (
+                      <img
+                        key={i}
+                        // @ts-ignore
+                        src={`/strikers/${STRIKER_IMAGES[striker]}`} // Adjust path as needed
+                        alt={striker}
+                        width={24}
+                        style={{ borderRadius: "4px" }}
+                      />
+                    )
+                  )}
+                </div>
+              </td>
               <td>
                 {formatDuration(anonymousGoalieStats.totalPlaytimeInSeconds)}
               </td>
