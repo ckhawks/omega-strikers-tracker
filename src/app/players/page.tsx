@@ -2,8 +2,8 @@ import styles from "../main.module.scss";
 import Link from "next/link";
 import NavigationBar from "@/components/NavigationBar";
 import { db } from "@/util/db/db";
-import { STRIKER_IMAGES } from "@/constants/strikers";
 import { AVATAR_IMAGES } from "@/constants/avatars";
+import StrikerAvatar from "@/components/StrikerAvatar";
 
 export const revalidate = 1;
 
@@ -572,15 +572,10 @@ ORDER BY "matchesPlayed" DESC;
                       player.topStrikers.map((striker: any) => {
                         if (striker != null) {
                           return (
-                            <img
+                            <StrikerAvatar
+                              striker={striker}
                               key={striker}
-                              width={32}
-                              src={
-                                "/strikers/" +
-                                // @ts-ignore
-                                STRIKER_IMAGES[striker]
-                              }
-                              style={{ borderRadius: "8px" }}
+                              rightMargin={false}
                             />
                           );
                         }
@@ -659,13 +654,10 @@ ORDER BY "matchesPlayed" DESC;
               <td>
                 <div style={{ display: "flex", gap: "4px" }}>
                   {player.topStrikers?.map((striker: any, i: number) => (
-                    <img
-                      key={i}
-                      // @ts-ignore
-                      src={`/strikers/${STRIKER_IMAGES[striker]}`} // Adjust path as needed
-                      alt={striker}
-                      width={24}
-                      style={{ borderRadius: "4px" }}
+                    <StrikerAvatar
+                      striker={striker}
+                      rightMargin={false}
+                      key={striker}
                     />
                   ))}
                 </div>
@@ -796,13 +788,10 @@ ORDER BY "matchesPlayed" DESC;
                 <div style={{ display: "flex", gap: "4px" }}>
                   {anonymousCombinedStats.topStrikers?.map(
                     (striker: any, i: number) => (
-                      <img
-                        key={i}
-                        // @ts-ignore
-                        src={`/strikers/${STRIKER_IMAGES[striker]}`} // Adjust path as needed
-                        alt={striker}
-                        width={24}
-                        style={{ borderRadius: "4px" }}
+                      <StrikerAvatar
+                        striker={striker}
+                        rightMargin={false}
+                        key={striker}
                       />
                     )
                   )}
@@ -937,13 +926,10 @@ ORDER BY "matchesPlayed" DESC;
               <td>
                 <div style={{ display: "flex", gap: "4px" }}>
                   {player.topStrikers?.map((striker: any, i: number) => (
-                    <img
-                      key={i}
-                      // @ts-ignore
-                      src={`/strikers/${STRIKER_IMAGES[striker]}`} // Adjust path as needed
-                      alt={striker}
-                      width={24}
-                      style={{ borderRadius: "4px" }}
+                    <StrikerAvatar
+                      striker={striker}
+                      rightMargin={false}
+                      key={striker}
                     />
                   ))}
                 </div>
@@ -1074,13 +1060,10 @@ ORDER BY "matchesPlayed" DESC;
                 <div style={{ display: "flex", gap: "4px" }}>
                   {anonymousForwardStats.topStrikers?.map(
                     (striker: any, i: number) => (
-                      <img
-                        key={i}
-                        // @ts-ignore
-                        src={`/strikers/${STRIKER_IMAGES[striker]}`} // Adjust path as needed
-                        alt={striker}
-                        width={24}
-                        style={{ borderRadius: "4px" }}
+                      <StrikerAvatar
+                        striker={striker}
+                        rightMargin={false}
+                        key={striker}
                       />
                     )
                   )}
@@ -1207,13 +1190,10 @@ ORDER BY "matchesPlayed" DESC;
               <td>
                 <div style={{ display: "flex", gap: "4px" }}>
                   {player.topStrikers?.map((striker: any, i: number) => (
-                    <img
-                      key={i}
-                      // @ts-ignore
-                      src={`/strikers/${STRIKER_IMAGES[striker]}`} // Adjust path as needed
-                      alt={striker}
-                      width={24}
-                      style={{ borderRadius: "4px" }}
+                    <StrikerAvatar
+                      striker={striker}
+                      rightMargin={false}
+                      key={striker}
                     />
                   ))}
                 </div>
@@ -1345,13 +1325,10 @@ ORDER BY "matchesPlayed" DESC;
                 <div style={{ display: "flex", gap: "4px" }}>
                   {anonymousGoalieStats.topStrikers?.map(
                     (striker: any, i: number) => (
-                      <img
-                        key={i}
-                        // @ts-ignore
-                        src={`/strikers/${STRIKER_IMAGES[striker]}`} // Adjust path as needed
-                        alt={striker}
-                        width={24}
-                        style={{ borderRadius: "4px" }}
+                      <StrikerAvatar
+                        striker={striker}
+                        rightMargin={false}
+                        key={striker}
                       />
                     )
                   )}

@@ -2,8 +2,8 @@ import styles from "../main.module.scss";
 import Link from "next/link";
 import NavigationBar from "@/components/NavigationBar";
 import { db } from "@/util/db/db";
-import { STRIKER_IMAGES } from "@/constants/strikers";
 import { AVATAR_IMAGES } from "@/constants/avatars";
+import StrikerAvatar from "@/components/StrikerAvatar";
 
 export const revalidate = 1;
 
@@ -127,13 +127,7 @@ export default async function GlobalStats() {
                         </td>
                         <td>Forward</td>
                         <td>
-                          <img
-                            width={32}
-                            // @ts-ignore
-                            src={`/strikers/${STRIKER_IMAGES[striker]}`}
-                            alt={striker}
-                            style={{ borderRadius: "4px", marginRight: "8px" }}
-                          />
+                          <StrikerAvatar striker={striker} />
                           {striker}
                         </td>
                         <td>{winRate}%</td>
@@ -170,13 +164,7 @@ export default async function GlobalStats() {
                         </td>
                         <td>Goalie</td>
                         <td>
-                          <img
-                            width={32}
-                            // @ts-ignore
-                            src={`/strikers/${STRIKER_IMAGES[striker]}`}
-                            alt={striker}
-                            style={{ borderRadius: "4px", marginRight: "8px" }}
-                          />
+                          <StrikerAvatar striker={striker} />
                           {striker}
                         </td>
                         <td>{winRate}%</td>

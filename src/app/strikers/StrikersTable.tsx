@@ -5,8 +5,8 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import styles from "../main.module.scss";
-import { STRIKER_IMAGES } from "@/constants/strikers";
 import { Form } from "react-bootstrap";
+import StrikerAvatar from "@/components/StrikerAvatar";
 
 export default function StrikersTable({
   combinedStats,
@@ -65,13 +65,7 @@ export default function StrikersTable({
           {stats.map((striker: any) => (
             <tr key={striker.striker}>
               <td>
-                <img
-                  width={32}
-                  // @ts-ignore
-                  src={`/strikers/${STRIKER_IMAGES[striker.striker]}`}
-                  alt={striker.striker}
-                  style={{ marginRight: "4px" }}
-                />{" "}
+                <StrikerAvatar striker={striker.striker} />
                 {striker.striker}
               </td>
               <td>{striker.winRate}%</td>

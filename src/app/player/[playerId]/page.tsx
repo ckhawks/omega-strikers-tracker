@@ -1,8 +1,8 @@
 import styles from "../../main.module.scss";
 import { db } from "@/util/db/db";
 import NavigationBar from "@/components/NavigationBar";
-import { STRIKER_IMAGES } from "@/constants/strikers";
 import BackButton from "@/components/BackButton";
+import StrikerAvatar from "@/components/StrikerAvatar";
 
 export const revalidate = 1;
 
@@ -318,14 +318,7 @@ export default async function PlayerDetails({
               player.topStrikers.map((striker: any) => {
                 return (
                   <li key={striker.striker}>
-                    <img
-                      width={32}
-                      src={
-                        // @ts-ignore
-                        "/strikers/" + STRIKER_IMAGES[striker.striker as string]
-                      }
-                      style={{ marginRight: "8px" }}
-                    ></img>
+                    <StrikerAvatar striker={striker.striker as string} />
                     {striker.striker}. Played {striker.timesPlayed} times,{" "}
                     {striker.wins} wins, {striker.winRate}% Winrate
                   </li>
@@ -394,12 +387,9 @@ export default async function PlayerDetails({
                                     alignItems: "center",
                                   }}
                                 >
-                                  <img
-                                    width={32}
-                                    // @ts-ignore
-                                    src={`/strikers/${STRIKER_IMAGES[striker]}`}
-                                    alt={striker}
-                                    style={{ borderRadius: "4px" }}
+                                  <StrikerAvatar
+                                    striker={striker}
+                                    rightMargin={false}
                                   />
                                   <span style={{ fontSize: "12px" }}>
                                     {count}x
@@ -433,12 +423,9 @@ export default async function PlayerDetails({
                                     alignItems: "center",
                                   }}
                                 >
-                                  <img
-                                    width={32}
-                                    // @ts-ignore
-                                    src={`/strikers/${STRIKER_IMAGES[striker]}`}
-                                    alt={striker}
-                                    style={{ borderRadius: "4px" }}
+                                  <StrikerAvatar
+                                    striker={striker}
+                                    rightMargin={false}
                                   />
                                   <span style={{ fontSize: "12px" }}>
                                     {count}x
@@ -472,12 +459,9 @@ export default async function PlayerDetails({
                                     alignItems: "center",
                                   }}
                                 >
-                                  <img
-                                    width={32}
-                                    // @ts-ignore
-                                    src={`/strikers/${STRIKER_IMAGES[striker]}`}
-                                    alt={striker}
-                                    style={{ borderRadius: "4px" }}
+                                  <StrikerAvatar
+                                    striker={striker}
+                                    rightMargin={false}
                                   />
                                   <span style={{ fontSize: "12px" }}>
                                     {count}x
@@ -511,12 +495,9 @@ export default async function PlayerDetails({
                                     alignItems: "center",
                                   }}
                                 >
-                                  <img
-                                    width={32}
-                                    // @ts-ignore
-                                    src={`/strikers/${STRIKER_IMAGES[striker]}`}
-                                    alt={striker}
-                                    style={{ borderRadius: "4px" }}
+                                  <StrikerAvatar
+                                    striker={striker}
+                                    rightMargin={false}
                                   />
                                   <span style={{ fontSize: "12px" }}>
                                     {count}x
@@ -648,12 +629,7 @@ export default async function PlayerDetails({
                 player.topStrikers.map((striker: any) => (
                   <tr key={striker.striker}>
                     <td>
-                      <img
-                        width={32}
-                        // @ts-ignore
-                        src={`/strikers/${STRIKER_IMAGES[striker.striker]}`}
-                        style={{ marginRight: "4px" }}
-                      />{" "}
+                      <StrikerAvatar striker={striker.striker} />
                       {striker.striker}
                     </td>
                     <td>{striker.winRate}%</td>

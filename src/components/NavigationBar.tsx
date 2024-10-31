@@ -70,6 +70,14 @@ export default function NavigationBar() {
         >
           Global
         </Link>
+        <Link
+          href={"/comps"}
+          className={`${styles.navItem} ${
+            pathname === "/comps" ? styles.active : ""
+          }`}
+        >
+          Comps
+        </Link>
         {isAuthenticated && (
           <Link
             href={"/create"}

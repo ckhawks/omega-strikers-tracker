@@ -3,7 +3,7 @@
 import { db } from "@/util/db/db";
 import styles from "../main.module.scss";
 import NavigationBar from "@/components/NavigationBar";
-import { STRIKER_IMAGES } from "@/constants/strikers";
+import StrikerAvatar from "@/components/StrikerAvatar";
 
 export default async function Bans() {
   // Query for top strikers by win rate
@@ -101,13 +101,7 @@ export default async function Bans() {
                 {strikers.map((striker: any) => (
                   <tr key={striker.striker}>
                     <td>
-                      <img
-                        width={32}
-                        // @ts-ignore
-                        src={`/strikers/${STRIKER_IMAGES[striker.striker]}`}
-                        alt={striker.striker}
-                        style={{ marginRight: "4px" }}
-                      />{" "}
+                      <StrikerAvatar striker={striker.striker} />
                       {striker.striker}
                     </td>
                     <td>{striker.role}</td>
@@ -147,13 +141,7 @@ export default async function Bans() {
                 {strikers.map((striker: any) => (
                   <tr key={striker.striker}>
                     <td>
-                      <img
-                        width={32}
-                        // @ts-ignore
-                        src={`/strikers/${STRIKER_IMAGES[striker.striker]}`}
-                        alt={striker.striker}
-                        style={{ marginRight: "4px" }}
-                      />{" "}
+                      <StrikerAvatar striker={striker.striker} />
                       {striker.striker}
                     </td>
                     <td>{striker.role}</td>

@@ -1,7 +1,7 @@
 import styles from "../../main.module.scss";
 import { db } from "@/util/db/db";
 import NavigationBar from "@/components/NavigationBar";
-import { STRIKER_IMAGES } from "@/constants/strikers";
+import StrikerAvatar from "@/components/StrikerAvatar";
 
 export const revalidate = 1;
 
@@ -133,12 +133,8 @@ export default async function MatchDetails({
             <tr key={index}>
               <td>{player.name ? player.name : "Anonymous"}</td>
               <td>
-                <img
-                  width={32}
-                  // @ts-ignore
-                  src={"/strikers/" + STRIKER_IMAGES[player.striker as string]}
-                  style={{ marginRight: "8px" }}
-                ></img>
+                <StrikerAvatar striker={player.striker as string} />
+
                 {player.striker}
               </td>
               <td>{player.teamNumber}</td>
