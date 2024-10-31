@@ -1,16 +1,22 @@
+// strikers/StrikersTable.tsx
+
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import styles from "../main.module.scss";
 import { STRIKER_IMAGES } from "@/constants/strikers";
-import { Col, Form, FormLabel, Row } from "react-bootstrap";
+import { Form } from "react-bootstrap";
 
 export default function StrikersTable({
-  strikersStats,
+  combinedStats,
+  forwardStats,
+  goalieStats,
   excludeFriendlies,
 }: {
-  strikersStats: any;
+  combinedStats: any;
+  forwardStats: any;
+  goalieStats: any;
   excludeFriendlies: boolean;
 }) {
   const router = useRouter();
@@ -35,16 +41,9 @@ export default function StrikersTable({
     router.push(`?${params.toString()}`);
   };
 
-  return (
+  const renderTable = (title: string, stats: any) => (
     <>
-      <h3>Strikers - Combined</h3>
-      <Form.Check
-        type="checkbox"
-        checked={checked}
-        onChange={handleCheckboxChange}
-        label={"Exclude registered players data"}
-      />
-
+      <h3>{title}</h3>
       <table>
         <thead>
           <tr>
@@ -63,7 +62,7 @@ export default function StrikersTable({
           </tr>
         </thead>
         <tbody>
-          {strikersStats.map((striker: any) => (
+          {stats.map((striker: any) => (
             <tr key={striker.striker}>
               <td>
                 <img
@@ -90,6 +89,21 @@ export default function StrikersTable({
           ))}
         </tbody>
       </table>
+    </>
+  );
+
+  return (
+    <>
+      <Form.Check
+        type="checkbox"
+        checked={checked}
+        onChange={handleCheckboxChange}
+        label={"Exclude registered players data"}
+      />
+
+      {renderTable("Strikers - Combined", combinedStats)}
+      {renderTable("Strikers - Forwards", forwardStats)}
+      {renderTable("Strikers - Goalies", goalieStats)}
     </>
   );
 }

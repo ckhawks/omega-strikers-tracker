@@ -86,3 +86,21 @@
   padding: 1rem;
   margin: 1rem 0rem;
 }
+
+.maps-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  // justify-content: space-around;
+}
+
+.map-section {
+  flex: 1 1 400px; /* Each item will take up at least 300px */
+  min-width: 400px; /* Minimum width to help with wrapping */
+  max-width: 400px; /* Maximum width to limit large screens */
+  // box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  padding-left: 0px;
+  border-radius: 8px;
+  // background-color: #f9f9f9;
+}

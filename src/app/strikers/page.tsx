@@ -1,7 +1,11 @@
+// strikers/page.tsx
+
 import { db } from "@/util/db/db";
 import StrikersTable from "./StrikersTable"; // Client component
 import NavigationBar from "@/components/NavigationBar";
 import styles from "../main.module.scss";
+
+export const revalidate = 1;
 
 // Server component
 export default async function StrikersList({
@@ -11,7 +15,7 @@ export default async function StrikersList({
 }) {
   const excludeFriendlies = searchParams.excludeFriendlies === "true";
 
-  const query = `
+  const baseQuery = (goalieOnly: boolean | null) => `
     WITH striker_stats AS (
         SELECT
             mp."striker",
@@ -35,19 +39,26 @@ export default async function StrikersList({
         JOIN "Match" m ON mp."matchId" = m."id"
         WHERE mp."deletedAt" IS NULL
         ${excludeFriendlies ? 'AND mp."playerId" IS NULL' : ""}
+        ${goalieOnly !== null ? `AND mp."wasGoalie" = ${goalieOnly}` : ""}
         GROUP BY mp."striker"
         ORDER BY "winRate" DESC, "timesPlayed" DESC
     )
     SELECT * FROM striker_stats;
   `;
 
-  const strikersStats = await db(query, []);
+  const [combinedStats, forwardStats, goalieStats] = await Promise.all([
+    db(baseQuery(null), []), // Combined
+    db(baseQuery(false), []), // Forward
+    db(baseQuery(true), []), // Goalie
+  ]);
 
   return (
     <div className={styles.main}>
       <NavigationBar />
       <StrikersTable
-        strikersStats={strikersStats}
+        combinedStats={combinedStats}
+        forwardStats={forwardStats}
+        goalieStats={goalieStats}
         excludeFriendlies={excludeFriendlies}
       />
     </div>
