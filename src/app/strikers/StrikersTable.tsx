@@ -21,7 +21,7 @@ export default function StrikersTable({
     setChecked(excludeFriendlies);
   }, [excludeFriendlies]);
 
-  const handleCheckboxChange = (e) => {
+  const handleCheckboxChange = (e: any) => {
     const newChecked = e.target.checked;
     setChecked(newChecked);
 
