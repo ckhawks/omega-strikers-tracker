@@ -3,6 +3,7 @@ import { db } from "@/util/db/db";
 import NavigationBar from "@/components/NavigationBar";
 import BackButton from "@/components/BackButton";
 import StrikerAvatar from "@/components/StrikerAvatar";
+import { RANKS } from "@/constants/ranks";
 
 export const revalidate = 1;
 
@@ -294,6 +295,74 @@ export default async function PlayerDetails({
   );
   // console.log(playerStats);
   // console.log(playerRoleStats);
+
+  const matches = await db(
+    `WITH ranked_redirects AS (
+      SELECT
+          mp."matchId",
+          mp."playerId",
+          mp."striker",
+          mp."statRedirects",
+          mp."teamNumber",
+          mp."wasGoalie",
+          ROW_NUMBER() OVER (
+              PARTITION BY mp."matchId"
+              ORDER BY mp."statRedirects" DESC
+          ) AS "redirectRank"
+      FROM "MatchPlayer" mp
+  ),
+  player_matches AS (
+      SELECT
+          mp."playerId",  -- Ensure playerId is included here for filtering
+          m."id" AS "matchId",
+          m."map",
+          m."createdAt",
+          m."duration" AS "length",
+          CASE 
+              WHEN (m."team1Won" = true AND mp."teamNumber" = 1) OR 
+                   (m."team1Won" = false AND mp."teamNumber" = 2) 
+              THEN 'Win' ELSE 'Loss' 
+          END AS "result",
+          mp."striker",
+          mp."wasGoalie" AS "role",
+          rr."redirectRank",
+          teammates.teammates,
+          enemies.enemies,
+          ranks."averageRank",
+          ranks."rankedPlayersCount"
+      FROM "MatchPlayer" mp
+      JOIN "Match" m ON mp."matchId" = m."id"
+      JOIN ranked_redirects rr ON mp."matchId" = rr."matchId" AND mp."playerId" = rr."playerId"
+      
+      LEFT JOIN LATERAL (
+          SELECT json_agg(json_build_object('striker', t."striker", 'role', t."wasGoalie")) AS teammates
+          FROM "MatchPlayer" t
+          WHERE t."matchId" = mp."matchId" 
+            AND t."teamNumber" = mp."teamNumber"
+            AND (t."playerId" IS DISTINCT FROM mp."playerId" OR t."playerId" IS NULL)
+      ) teammates ON true
+  
+      LEFT JOIN LATERAL (
+          SELECT json_agg(json_build_object('striker', e."striker", 'role', e."wasGoalie")) AS enemies
+          FROM "MatchPlayer" e
+          WHERE e."matchId" = mp."matchId" AND e."teamNumber" != mp."teamNumber"
+      ) enemies ON true
+  
+      LEFT JOIN LATERAL (
+          SELECT
+              ROUND(AVG(CASE WHEN "rank" > 0 THEN "rank" END), 2) AS "averageRank",
+              COUNT(CASE WHEN "rank" > 0 THEN 1 END) AS "rankedPlayersCount"
+          FROM "MatchPlayer"
+          WHERE "matchId" = mp."matchId"
+      ) ranks ON true
+  )
+  SELECT * FROM player_matches
+  WHERE "playerId" = $1
+  ORDER BY "createdAt" DESC;
+  
+`,
+    [player.id]
+  );
 
   return (
     <div className={styles.main}>
@@ -648,6 +717,101 @@ export default async function PlayerDetails({
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div>
+        <h2>Player Match History</h2>
+        <p>{matches.length} matches</p>
+      </div>
+      <div className={styles.matchList}>
+        {matches.map((match) => (
+          <div
+            key={match.matchId}
+            className={`${styles.matchCard} ${
+              match.result === "Win" ? styles.win : styles.loss
+            }`}
+          >
+            <div style={{ width: "100%", marginRight: "2rem" }}>
+              <div className={styles.matchHeader}>
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: "1rem" }}
+                >
+                  <h3 style={{ marginBottom: "0" }}>
+                    <span>{match.score}</span> {match.result}
+                  </h3>
+                  <div>{match.map}</div>
+                </div>
+                <div>
+                  <strong>Duration:</strong> {Math.floor(match.length / 60)}m{" "}
+                  {Math.floor(match.length % 60)}s
+                </div>
+              </div>
+              <div className={styles.matchDetails}>
+                <div>
+                  <StrikerAvatar striker={match.striker} /> {match.striker}
+                  {" — "}
+                  {match.role ? "Goalie" : "Forward"}
+                  <p style={{ marginTop: ".5rem" }}>
+                    <span>Performance:</span> {match.redirectRank} / 6
+                  </p>
+                </div>
+
+                <div className={styles.teammates}>
+                  <h3>Teammates</h3>
+                  <ul>
+                    {match.teammates &&
+                      match.teammates.map((teammate: any, index: number) => (
+                        <li key={index}>
+                          <StrikerAvatar striker={teammate.striker} />{" "}
+                          {teammate.striker}
+                          {" — "}
+                          {teammate.role ? "Goalie" : "Forward"}
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+
+                <div className={styles.enemies}>
+                  <h3>Enemies</h3>
+                  <ul>
+                    {match.enemies &&
+                      match.enemies.map((enemy: any, index: number) => (
+                        <li key={index}>
+                          <StrikerAvatar striker={enemy.striker} />{" "}
+                          {enemy.striker}
+                          {" — "}
+                          {enemy.role ? "Goalie" : "Forward"}
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <center>
+                    <img
+                      src={`/rank_images/${
+                        // @ts-ignore
+                        RANKS[Math.round(match.averageRank)].imagePath
+                      }`}
+                      width={64}
+                    />
+                    <br />
+                    {
+                      // @ts-ignore
+                      RANKS[Math.round(match.averageRank)].name ?? "N/A"
+                    }
+                    <p style={{ color: "grey" }}>
+                      ({match.rankedPlayersCount} ranks)
+                    </p>
+                  </center>
+                </div>
+              </div>
+            </div>
+            <a href={`/match/${match.matchId}`} className={styles.matchLink}>
+              View Match
+            </a>
+          </div>
+        ))}
       </div>
     </div>
   );

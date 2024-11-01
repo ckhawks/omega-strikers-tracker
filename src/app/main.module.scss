@@ -115,3 +115,63 @@
     width: 100%;
   }
 }
+
+/* used on the player's page for the match list */
+.matchList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.matchCard {
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.win {
+  // background-color: #dff0d8; // Green for wins
+  border-top: #7cc260 9px solid;
+}
+
+.loss {
+  // background-color: #f2dede; // Red for losses
+  border-top: #c95c5c 9px solid;
+}
+
+.matchHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.score {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.matchDetails {
+  margin-top: 8px;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.matchLink {
+  color: #007bff;
+  text-decoration: none;
+  justify-self: flex-end;
+  margin-left: auto;
+  word-wrap: normal;
+  min-width: 100px;
+}
+.matchLink:hover {
+  text-decoration: underline;
+}
