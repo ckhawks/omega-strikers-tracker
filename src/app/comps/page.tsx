@@ -4,6 +4,7 @@ import { db } from "@/util/db/db";
 import styles from "../main.module.scss";
 import DuoWinRatesAccordion from "./DuoWinRatesAccordion";
 import TrioCompsAccordion from "./TrioCompsAccordion";
+import SoloCounterStats from "./SoloCounterStats";
 
 export const revalidate = 1;
 
@@ -97,7 +98,8 @@ ORDER BY "map", "winRate" DESC, "matchesPlayed" DESC;
         COUNT(*) AS "matchesPlayed",
         SUM(
             CASE 
-                WHEN (m."team1Won" = true AND mp1."teamNumber" = 1) OR (m."team1Won" = false AND mp1."teamNumber" = 2) THEN 1
+                WHEN (m."team1Won" = true AND mp1."teamNumber" = 1) 
+                  OR (m."team1Won" = false AND mp1."teamNumber" = 2) THEN 1
                 ELSE 0 
             END
         ) AS "wins"
@@ -105,7 +107,6 @@ ORDER BY "map", "winRate" DESC, "matchesPlayed" DESC;
     JOIN "MatchPlayer" mp2 
         ON mp1."matchId" = mp2."matchId" 
         AND mp1."teamNumber" != mp2."teamNumber"
-        AND (mp1."playerId" IS DISTINCT FROM mp2."playerId" OR (mp1."playerId" IS NULL AND mp2."playerId" IS NULL))
     JOIN "Match" m 
         ON mp1."matchId" = m."id"
     GROUP BY mp1."striker", mp2."striker"
@@ -116,8 +117,7 @@ SELECT
     "matchesPlayed",
     ROUND(("wins"::numeric / NULLIF("matchesPlayed", 0)) * 100, 2) AS "winRate"
 FROM solo_counter_stats
-ORDER BY "winRate" DESC, "matchesPlayed" DESC
-LIMIT 100;
+ORDER BY "winRate" DESC, "matchesPlayed" DESC, "striker";
   
   `,
     []
@@ -227,7 +227,8 @@ ORDER BY "winRate" DESC, "matchesPlayed" DESC;
       <h2>Top Duo Win Rates</h2>
       <DuoWinRatesAccordion duosByMap={duosByMap} allMapsDuos={allMapsDuos} />
 
-      <div>
+      <SoloCounterStats soloCounters={soloCounters} />
+      {/* <div>
         <h2>Solo Counter Win Rates</h2>
         <table>
           <thead>
@@ -255,7 +256,7 @@ ORDER BY "winRate" DESC, "matchesPlayed" DESC;
             ))}
           </tbody>
         </table>
-      </div>
+      </div> */}
     </div>
   );
 }

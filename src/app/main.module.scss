@@ -104,3 +104,14 @@
   border-radius: 8px;
   // background-color: #f9f9f9;
 }
+
+.soloCounterContainer {
+  display: flex;
+  flex: 1 1;
+  gap: 2rem;
+  // justify-content: ;
+  min-width: 100%;
+  & > * {
+    width: 100%;
+  }
+}
