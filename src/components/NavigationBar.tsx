@@ -78,6 +78,14 @@ export default function NavigationBar() {
         >
           Comps
         </Link>
+        <Link
+          href={"/predict"}
+          className={`${styles.navItem} ${
+            pathname === "/predict" ? styles.active : ""
+          }`}
+        >
+          Predict
+        </Link>
         {isAuthenticated && (
           <Link
             href={"/create"}
