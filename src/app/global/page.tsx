@@ -4,6 +4,7 @@ import NavigationBar from "@/components/NavigationBar";
 import { db } from "@/util/db/db";
 import { AVATAR_IMAGES } from "@/constants/avatars";
 import StrikerAvatar from "@/components/StrikerAvatar";
+import Tooltip from "@/components/Tooltip";
 
 export const revalidate = 1;
 
@@ -92,9 +93,16 @@ export default async function GlobalStats() {
               <th>Role</th>
               <th>Striker</th>
               <th>Win Rate (%)</th>
-              <th>Matches Played</th>
-              <th>Friendly (%)</th>
-              <th>Wins</th>
+              <th>Matches</th>
+              <th>
+                <Tooltip
+                  text={
+                    "What percent of the matches were played by a registered user"
+                  }
+                >
+                  <span className={styles["tooltippable"]}>Friendly (%)</span>
+                </Tooltip>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -133,7 +141,6 @@ export default async function GlobalStats() {
                         <td>{winRate}%</td>
                         <td>{matchesPlayed}</td>
                         <td>{friendlyRate}%</td>
-                        <td>{wins}</td>
                       </tr>
                     )
                   )}
@@ -170,7 +177,6 @@ export default async function GlobalStats() {
                         <td>{winRate}%</td>
                         <td>{matchesPlayed}</td>
                         <td>{friendlyRate}%</td>
-                        <td>{wins}</td>
                       </tr>
                     )
                   )}

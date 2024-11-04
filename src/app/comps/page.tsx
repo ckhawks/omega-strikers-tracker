@@ -51,7 +51,7 @@ export default async function TeamCompositions({
     JOIN "MatchPlayer" mp2 
         ON mp1."matchId" = mp2."matchId" 
         AND mp1."teamNumber" = mp2."teamNumber" 
-        AND (mp1."playerId" IS DISTINCT FROM mp2."playerId" OR (mp1."playerId" IS NULL AND mp2."playerId" IS NULL))
+        AND mp1."striker" < mp2."striker"  -- This ensures each pair is counted only once and prevents self-pairing
     JOIN "Match" m 
         ON mp1."matchId" = m."id"
     GROUP BY m."map", "striker1", "striker2", mp1."wasGoalie", mp2."wasGoalie"

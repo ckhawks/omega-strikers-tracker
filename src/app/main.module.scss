@@ -175,3 +175,12 @@
 .matchLink:hover {
   text-decoration: underline;
 }
+
+.tooltippable {
+  -webkit-text-decoration-style: wavy;
+  -moz-text-decoration-style: wavy;
+  text-decoration-style: wavy;
+  border-bottom: 2px dotted rgb(159, 159, 159);
+  display: inline-block;
+  position: relative;
+}
