@@ -84,3 +84,10 @@ h6 {
   margin: unset;
   color: var(--text-color);
 }
+
+tr:hover {
+  & > * {
+    text-shadow: 0 0 1px black;
+  }
+  // border: 1.5px solid black !important;
+}
