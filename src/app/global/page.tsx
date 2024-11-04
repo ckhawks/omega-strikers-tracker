@@ -96,9 +96,7 @@ export default async function GlobalStats() {
               <th>Matches</th>
               <th>
                 <Tooltip
-                  text={
-                    "What percent of the matches were played by a registered user"
-                  }
+                  text={"Percent of the matches played by a registered user"}
                 >
                   <span className={styles["tooltippable"]}>Friendly (%)</span>
                 </Tooltip>

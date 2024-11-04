@@ -184,3 +184,80 @@
   display: inline-block;
   position: relative;
 }
+
+/* visualization on the matches page */
+.matchRankSummary {
+  margin: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.dataAvailability,
+.matchBalance {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.availabilityItem,
+.balanceItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.noDataBox {
+  width: 10px;
+  height: 10px;
+  background-color: red;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.partialDataBox {
+  width: 10px;
+  height: 10px;
+  background-color: orange;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.completeDataBox {
+  width: 10px;
+  height: 10px;
+  background-color: green;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.perfectBalanceBox {
+  width: 10px;
+  height: 10px;
+  background-color: #4caf50;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.slightlyUnevenBox {
+  width: 10px;
+  height: 10px;
+  background-color: #ffc107;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.moderatelyUnevenBox {
+  width: 10px;
+  height: 10px;
+  background-color: #ff9800;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.highlyUnevenBox {
+  width: 10px;
+  height: 10px;
+  background-color: #f44336;
+  display: inline-block;
+  margin-right: 8px;
+}
