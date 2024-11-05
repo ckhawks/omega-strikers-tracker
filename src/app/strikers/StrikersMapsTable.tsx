@@ -70,42 +70,39 @@ export default function StrikerWinRates({
       [strikerB, dataB]: [strikerB: string, dataB: any]
     ) => {
       const { column, direction } = sortConfig;
-      let aValue, bValue;
+      let aValue, bValue, aMatches, bMatches;
 
-      // Handle "striker" column
+      // Primary sorting value
       if (column === "striker") {
         aValue = strikerA;
         bValue = strikerB;
-      }
-      // Handle "total" columns
-      else if (column.includes("total")) {
+      } else if (column.includes("total")) {
         aValue = dataA.total[column.replace("total_", "")];
         bValue = dataB.total[column.replace("total_", "")];
-      }
-      // Handle map-specific forward/goalie columns
-      else {
+        aMatches = dataA.total[`${column.replace("total_", "")}Matches`];
+        bMatches = dataB.total[`${column.replace("total_", "")}Matches`];
+      } else {
         const [map, role] = column.split("_");
         aValue = dataA.maps[map]?.[role];
         bValue = dataB.maps[map]?.[role];
+        aMatches = dataA.maps[map]?.[`${role}Matches`];
+        bMatches = dataB.maps[map]?.[`${role}Matches`];
       }
 
       // Convert values to numeric or handle nulls for "N/A"
-      const aValNum = aValue === null || aValue === undefined ? null : -aValue;
-      const bValNum = bValue === null || bValue === undefined ? null : -bValue;
-
-      console.log(`Sorting by ${column} in ${direction} order:`, {
-        aValue,
-        bValue,
-        aValNum,
-        bValNum,
-      });
-
-      if (aValNum === bValNum) return 0;
-      if (aValNum === null) return direction === "asc" ? 1 : -1;
-      if (bValNum === null) return direction === "asc" ? -1 : 1;
-
+      const aValNum =
+        aValue === null || aValue === undefined ? -Infinity : +aValue;
+      const bValNum =
+        bValue === null || bValue === undefined ? -Infinity : +bValue;
       const sortDirection = direction === "asc" ? 1 : -1;
-      return aValNum > bValNum ? sortDirection : -sortDirection;
+
+      // Primary sort
+      if (aValNum !== bValNum)
+        return aValNum > bValNum ? sortDirection : -sortDirection;
+
+      // Secondary sort by matches played if primary values are equal
+      if (aMatches === bMatches) return 0;
+      return aMatches > bMatches ? sortDirection : -sortDirection;
     }
   );
 

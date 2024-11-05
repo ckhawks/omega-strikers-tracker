@@ -1,6 +1,7 @@
 "use client";
 
 import Accordion from "react-bootstrap/Accordion";
+import Form from "react-bootstrap/Form";
 import { useEffect, useState } from "react";
 import styles from "../main.module.scss";
 import StrikerAvatar from "@/components/StrikerAvatar";
@@ -11,9 +12,17 @@ export default function SoloCounterStats({
 }: {
   soloCounters: any;
 }) {
-  // Filter solo counter data for matchesPlayed >= 2
+  // Checkbox state
+  const [showOneMatch, setShowOneMatch] = useState(false);
+
+  // Handle checkbox change
+  const handleCheckboxChange = () => {
+    setShowOneMatch(!showOneMatch);
+  };
+
+  // Filter solo counter data based on checkbox state
   const filteredSoloCounters = soloCounters.filter(
-    (counter: any) => counter.matchesPlayed >= 2
+    (counter: any) => counter.matchesPlayed >= (showOneMatch ? 1 : 2) // change this between 1 and 2
   );
 
   // Group and sort solo counter data by striker
@@ -65,6 +74,14 @@ export default function SoloCounterStats({
 
       <div className={styles.accordionView}>
         <h2>Counter Stats by Striker</h2>
+        <Form.Check
+          type="checkbox"
+          id="show-one-match"
+          checked={showOneMatch}
+          onChange={handleCheckboxChange}
+          label="Show striker opponents with 1 match played"
+        />
+        <br />
         <Accordion>
           {sortedStrikers.map((striker: string, index: number) => (
             <Accordion.Item eventKey={index.toString()} key={striker}>
