@@ -5,6 +5,7 @@ import StrikersTable from "./StrikersTable"; // Client component
 import NavigationBar from "@/components/NavigationBar";
 import styles from "../main.module.scss";
 import StrikerAvatar from "@/components/StrikerAvatar";
+import StrikerWinRates from "./StrikersMapsTable";
 
 export const revalidate = 1;
 
@@ -53,7 +54,7 @@ export default async function StrikersList({
     db(baseQuery(true), []), // Goalie
   ]);
 
-  const strikerMapWinRates = await db(
+  const strikerWinRates = await db(
     `
     WITH striker_map_data AS (
       SELECT 
@@ -88,51 +89,45 @@ export default async function StrikersList({
           END AS forward_win_rate,
           CASE WHEN role = false THEN matches_played ELSE NULL END AS forward_matches_played
       FROM striker_map_data
+  ),
+  striker_total_data AS (
+      SELECT 
+          "striker",
+          SUM(CASE WHEN role = true THEN matches_played ELSE 0 END) AS total_goalie_matches,
+          SUM(CASE WHEN role = false THEN matches_played ELSE 0 END) AS total_forward_matches,
+          SUM(matches_played) AS total_matches,
+          ROUND(SUM(CASE WHEN role = true THEN wins ELSE 0 END)::numeric 
+                / NULLIF(SUM(CASE WHEN role = true THEN matches_played ELSE 0 END), 0) * 100, 2) AS total_goalie_win_rate,
+          ROUND(SUM(CASE WHEN role = false THEN wins ELSE 0 END)::numeric 
+                / NULLIF(SUM(CASE WHEN role = false THEN matches_played ELSE 0 END), 0) * 100, 2) AS total_forward_win_rate,
+          ROUND(SUM(wins)::numeric / NULLIF(SUM(matches_played), 0) * 100, 2) AS total_combined_win_rate
+      FROM striker_map_data
+      GROUP BY "striker"
   )
   SELECT 
-      "striker",
-      "map",
-      MAX(goalie_win_rate) AS goalie_win_rate,
-      MAX(goalie_matches_played) AS goalie_matches_played,
-      MAX(forward_win_rate) AS forward_win_rate,
-      MAX(forward_matches_played) AS forward_matches_played
-  FROM win_rates
-  GROUP BY "striker", "map"
-  ORDER BY "striker", "map";
+      wr."striker",
+      wr."map",
+      MAX(wr.goalie_win_rate) AS goalie_win_rate,
+      MAX(wr.goalie_matches_played) AS goalie_matches_played,
+      MAX(wr.forward_win_rate) AS forward_win_rate,
+      MAX(wr.forward_matches_played) AS forward_matches_played,
+      st.total_goalie_win_rate,
+      st.total_goalie_matches,
+      st.total_forward_win_rate,
+      st.total_forward_matches,
+      st.total_combined_win_rate,
+      st.total_matches
+  FROM win_rates wr
+  JOIN striker_total_data st ON wr."striker" = st."striker"
+  GROUP BY wr."striker", wr."map", st.total_goalie_win_rate, st.total_goalie_matches, st.total_forward_win_rate, st.total_forward_matches, st.total_combined_win_rate, st.total_matches
+  ORDER BY wr."striker", wr."map";
+  
   
   
   
     `,
     []
   );
-
-  const groupedData = strikerMapWinRates.reduce((acc, row) => {
-    const {
-      striker,
-      map,
-      goalie_win_rate,
-      goalie_matches_played,
-      forward_win_rate,
-      forward_matches_played,
-    } = row;
-    if (!acc[striker]) acc[striker] = {};
-    if (!acc[striker][map])
-      acc[striker][map] = {
-        forward: null,
-        forwardMatches: 0,
-        goalie: null,
-        goalieMatches: 0,
-      };
-
-    acc[striker][map].goalie = goalie_win_rate;
-    acc[striker][map].goalieMatches = goalie_matches_played;
-    acc[striker][map].forward = forward_win_rate;
-    acc[striker][map].forwardMatches = forward_matches_played;
-
-    return acc;
-  }, {});
-
-  const maps = Array.from(new Set(strikerMapWinRates.map((row) => row.map)));
 
   return (
     <div className={styles.main}>
@@ -144,65 +139,7 @@ export default async function StrikersList({
         excludeFriendlies={excludeFriendlies}
       />
       <h2>Striker Win Rates by Map</h2>
-      <table className={styles.winRateTable}>
-        <thead>
-          <tr>
-            <th>Striker</th>
-            {maps.map((map) => (
-              <th key={map} colSpan={2}>
-                <center>{map}</center>
-              </th>
-            ))}
-          </tr>
-          <tr>
-            <th></th>
-            {maps.map((map) => (
-              <>
-                <th key={`${map}-forward`}>Forward</th>
-                <th key={`${map}-goalie`}>Goalie</th>
-              </>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(groupedData).map(([striker, mapData]) => (
-            <tr key={striker}>
-              <td>
-                <StrikerAvatar striker={striker} />
-                {striker}
-              </td>
-              {maps.map((map) => (
-                <>
-                  <td key={`${striker}-${map}-forward`}>
-                    {mapData[map]?.forward ? (
-                      <>
-                        <span>{mapData[map]?.forward}%</span>{" "}
-                        <span className={styles["small"]}>
-                          {mapData[map].forwardMatches}
-                        </span>
-                      </>
-                    ) : (
-                      <span className={styles["subtext"]}>N/A</span>
-                    )}
-                  </td>
-                  <td key={`${striker}-${map}-goalie`}>
-                    {mapData[map]?.goalie ? (
-                      <>
-                        <span>{mapData[map]?.goalie}%</span>{" "}
-                        <span className={styles["small"]}>
-                          {mapData[map].goalieMatches}
-                        </span>
-                      </>
-                    ) : (
-                      <span className={styles["subtext"]}>N/A</span>
-                    )}
-                  </td>
-                </>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <StrikerWinRates strikerWinRates={strikerWinRates} />
     </div>
   );
 }
