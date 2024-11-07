@@ -86,6 +86,14 @@ export default function NavigationBar() {
         >
           Predict
         </Link>
+        <Link
+          href={"/draft"}
+          className={`${styles.navItem} ${
+            pathname === "/draft" ? styles.active : ""
+          }`}
+        >
+          Draft Assistant
+        </Link>
         {isAuthenticated && (
           <Link
             href={"/create"}
