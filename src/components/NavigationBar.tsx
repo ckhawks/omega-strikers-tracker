@@ -94,6 +94,14 @@ export default function NavigationBar() {
         >
           Draft Assistant
         </Link>
+        <Link
+          href={"/blu"}
+          className={`${styles.navItem} ${
+            pathname === "/blu" ? styles.active : ""
+          }`}
+        >
+          Blu
+        </Link>
         {isAuthenticated && (
           <Link
             href={"/create"}
