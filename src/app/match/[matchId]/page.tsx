@@ -175,7 +175,13 @@ ORDER BY mp."teamNumber";
         <div>
           <strong>Duration: </strong>
           {match.duration !== 0
-            ? `${Math.floor(match.duration / 60)}:${match.duration % 60}`
+            ? `${Math.floor(match.duration / 60).toLocaleString("en-US", {
+                minimumIntegerDigits: 2,
+                useGrouping: false,
+              })}:${(match.duration % 60).toLocaleString("en-US", {
+                minimumIntegerDigits: 2,
+                useGrouping: false,
+              })}`
             : "Unknown"}
         </div>
       </div>

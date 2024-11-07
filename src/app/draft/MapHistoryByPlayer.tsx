@@ -41,7 +41,7 @@ export default function MapHistoryByPlayer({
                     return (
                       <tr key={`${playerId}-${mapName}`}>
                         <td>
-                          {players.find((p) => p.id === playerId)?.name ||
+                          {players.find((p: any) => p.id === playerId)?.name ||
                             "Unknown Player"}
                         </td>
 

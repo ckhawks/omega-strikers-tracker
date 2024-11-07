@@ -17,3 +17,4 @@
 - Compare player to global (site-wide) average
 - Input field warnings when unexpected/unlikely scale of number (extra place value)
 - Draft helper tool
+- Favored/underdog but with comp

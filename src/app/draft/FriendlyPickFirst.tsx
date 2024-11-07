@@ -4,9 +4,9 @@ import { Col, Form } from "react-bootstrap";
 import styles from "../main.module.scss";
 
 export default function FriendlyPickFirst({
-  topStrikersWinRate,
+  selectedArena,
 }: {
-  topStrikersWinRate?: any;
+  selectedArena: any;
 }) {
   return (
     <div>
