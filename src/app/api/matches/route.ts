@@ -4,9 +4,14 @@ const { db } = require("@/util/db/db");
 const { NextResponse } = require("next/server");
 
 export async function POST(request: NextRequest) {
-  const { arena, teamA, teamB } = await request.json();
+  const { arena, teamA, teamB, sort } = await request.json();
   const params = [];
   let whereClause = "WHERE 1=1";
+
+  let orderByClause = `ORDER BY m."createdAt" DESC`;
+  if (sort && sort === "arena") {
+    orderByClause = `ORDER BY m."map", m."createdAt" ASC`;
+  }
 
   if (arena && arena != "Any") {
     whereClause += ` AND m."map" = $${params.length + 1}`;
@@ -77,7 +82,7 @@ export async function POST(request: NextRequest) {
     JOIN "MatchPlayer" mp ON m.id = mp."matchId"
     ${whereClause}
     GROUP BY m.id
-    ORDER BY m."createdAt" DESC
+    ${orderByClause}
   `;
 
   const matches = await db(query, params);

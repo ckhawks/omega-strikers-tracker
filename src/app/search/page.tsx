@@ -22,6 +22,7 @@ export default function WinRateCalculator() {
   ]);
 
   const [arena, setArena] = useState("");
+  const [sort, setSort] = useState("date");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -33,6 +34,7 @@ export default function WinRateCalculator() {
       arena,
       teamA: teamA.filter(({ striker }) => striker),
       teamB: teamB.filter(({ striker }) => striker),
+      sort: sort,
     };
 
     try {
@@ -77,27 +79,45 @@ export default function WinRateCalculator() {
       <div className={styles.winRateCalculator}>
         <h2>Search for Matches</h2>
 
-        <Form.Group style={{ maxWidth: "300px" }}>
-          <Form.Label>Arena</Form.Label>
-          <Form.Select
-            name="arena"
-            required
-            defaultValue={undefined}
-            onChange={(e) => setArena(e.target.value)}
-          >
-            <option value={undefined}>Any</option>
-            {ARENAS.map((arena, index) => {
-              return (
-                <option key={arena} value={arena}>
-                  {arena}
-                </option>
-              );
-            })}
-          </Form.Select>
-        </Form.Group>
-        <br />
         <Row>
-          <Col>
+          <Col style={{ maxWidth: "300px" }}>
+            <Form.Group>
+              <Form.Label>Arena</Form.Label>
+              <Form.Select
+                name="arena"
+                required
+                defaultValue={undefined}
+                onChange={(e) => setArena(e.target.value)}
+              >
+                <option value={undefined}>Any</option>
+                {ARENAS.map((arena, index) => {
+                  return (
+                    <option key={arena} value={arena}>
+                      {arena}
+                    </option>
+                  );
+                })}
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          <Col style={{ maxWidth: "300px" }}>
+            <Form.Group>
+              <Form.Label>Sort by...</Form.Label>
+              <Form.Select
+                name="sort"
+                required
+                defaultValue={"date"}
+                onChange={(e) => setSort(e.target.value)}
+              >
+                <option value={"date"}>Date</option>
+                <option value={"arena"}>Arena</option>
+              </Form.Select>
+            </Form.Group>
+          </Col>
+        </Row>
+        <br />
+        <Row style={{ maxWidth: "1200px" }}>
+          <Col xs={12} md={6}>
             {/* Team A */}
             <div className={styles.teamInput}>
               <h3>Team A</h3>
@@ -155,7 +175,7 @@ export default function WinRateCalculator() {
             </div>
           </Col>
 
-          <Col>
+          <Col xs={12} md={6}>
             {/* Team B */}
             <div className={styles.teamInput}>
               <h3>Team B</h3>
@@ -228,7 +248,7 @@ export default function WinRateCalculator() {
             hover
             responsive
             className="mt-4"
-            style={{ maxWidth: "1100px" }}
+            style={{ maxWidth: "1000px" }}
           >
             <thead>
               <tr>
