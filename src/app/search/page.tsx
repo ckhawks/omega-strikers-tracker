@@ -222,7 +222,14 @@ export default function WinRateCalculator() {
         <br />
         {/* Results Table */}
         {results.length > 0 && (
-          <Table striped bordered hover responsive className="mt-4">
+          <Table
+            striped
+            bordered
+            hover
+            responsive
+            className="mt-4"
+            style={{ maxWidth: "1100px" }}
+          >
             <thead>
               <tr>
                 <th>Arena</th>
