@@ -18,3 +18,5 @@
 - Input field warnings when unexpected/unlikely scale of number (extra place value)
 - Draft helper tool
 - Favored/underdog but with comp
+- Search tool
+  - Look up a match with specific parameters (Dubu vs Juliette matches)

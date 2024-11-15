@@ -95,6 +95,14 @@ export default function NavigationBar() {
           Draft Assistant
         </Link>
         <Link
+          href={"/search"}
+          className={`${styles.navItem} ${
+            pathname === "/search" ? styles.active : ""
+          }`}
+        >
+          Search
+        </Link>
+        <Link
           href={"/blu"}
           className={`${styles.navItem} ${
             pathname === "/blu" ? styles.active : ""
