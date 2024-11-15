@@ -91,8 +91,8 @@ export async function POST(request: NextRequest) {
       return {
         id: match.match_id,
         arena: match.arena,
-        team1Score: match.team1Score,
-        team2Score: match.team2Score,
+        team1Score: match.is_reversed ? match.team2Score : match.team1Score,
+        team2Score: match.is_reversed ? match.team1Score : match.team2Score,
         averageRank: match.averageRank,
         teamA: match.is_reversed ? teamB : teamA,
         teamB: match.is_reversed ? teamA : teamB,
