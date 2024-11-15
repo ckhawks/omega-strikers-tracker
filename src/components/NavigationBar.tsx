@@ -101,7 +101,7 @@ export default function NavigationBar() {
                 pathname === "/blu" ? styles.active : ""
               }`}
             >
-              Blu's Knowledge
+              Blu&apos;s Knowledge
             </Link>
           </div>
         </div>
