@@ -78,7 +78,6 @@ export async function POST(request: NextRequest) {
     ${whereClause}
     GROUP BY m.id
     ORDER BY m."createdAt" DESC
-    LIMIT 20;
   `;
 
   const matches = await db(query, params);
