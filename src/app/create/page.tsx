@@ -309,82 +309,86 @@ export default function CreateMatch() {
 
   if (!isAuthenticated) {
     return (
-      <div className={styles.main}>
+      <>
         <NavigationBar />
-        <h1>Unauthorized.</h1>
-      </div>
+        <div className={styles.main}>
+          <h1>Unauthorized.</h1>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className={styles.main}>
+    <>
       <NavigationBar />
-      <h1>Add Match</h1>
-      <Form onSubmit={handleSubmit}>
-        <h3>Match Details</h3>
-        <Form.Group>
-          <Form.Label>Arena</Form.Label>
-          <Form.Select name="arena" required defaultValue={undefined}>
-            <option disabled value={undefined}>
-              Select Arena
-            </option>
-            {ARENAS.map((arena, index) => {
-              return (
-                <option key={arena} value={arena}>
-                  {arena}
-                </option>
-              );
-            })}
-          </Form.Select>
-        </Form.Group>
-        <Form.Group>
-          <Form.Label>Match Duration</Form.Label>
-          <Row style={{ maxWidth: "200px" }}>
-            <Col>
-              <Form.Control type="number" name="matchDurationMinutes" />
+      <div className={styles.main}>
+        <h1>Add Match</h1>
+        <Form onSubmit={handleSubmit}>
+          <h3>Match Details</h3>
+          <Form.Group>
+            <Form.Label>Arena</Form.Label>
+            <Form.Select name="arena" required defaultValue={undefined}>
+              <option disabled value={undefined}>
+                Select Arena
+              </option>
+              {ARENAS.map((arena, index) => {
+                return (
+                  <option key={arena} value={arena}>
+                    {arena}
+                  </option>
+                );
+              })}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Match Duration</Form.Label>
+            <Row style={{ maxWidth: "200px" }}>
+              <Col>
+                <Form.Control type="number" name="matchDurationMinutes" />
+              </Col>
+              :
+              <Col>
+                <Form.Control type="number" name="matchDurationSeconds" />
+              </Col>
+            </Row>
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Match Date</Form.Label>
+            <Form.Control
+              disabled
+              type="date"
+              name="date"
+              value={matchDate}
+              onChange={handleDateChange}
+            />
+          </Form.Group>
+          <Row>
+            <Col xxl={6} xl={12}>
+              <h4>Team A</h4>
+              <Form.Group>
+                <Form.Label>Set Score</Form.Label>
+                <Form.Control type="number" name="team1Score" min={0} max={3} />
+              </Form.Group>
+              <PlayerSection players={players} number={1} />
+              <PlayerSection players={players} number={2} />
+              <PlayerSection players={players} number={3} />
             </Col>
-            :
-            <Col>
-              <Form.Control type="number" name="matchDurationSeconds" />
+            <Col xxl={6} xl={12}>
+              <h4>Team B</h4>
+              <Form.Group>
+                <Form.Label>Set Score</Form.Label>
+                <Form.Control type="number" name="team2Score" min={0} max={3} />
+              </Form.Group>
+              <PlayerSection players={players} number={4} />
+              <PlayerSection players={players} number={5} />
+              <PlayerSection players={players} number={6} />
             </Col>
           </Row>
-        </Form.Group>
-        <Form.Group>
-          <Form.Label>Match Date</Form.Label>
-          <Form.Control
-            disabled
-            type="date"
-            name="date"
-            value={matchDate}
-            onChange={handleDateChange}
-          />
-        </Form.Group>
-        <Row>
-          <Col xxl={6} xl={12}>
-            <h4>Team A</h4>
-            <Form.Group>
-              <Form.Label>Set Score</Form.Label>
-              <Form.Control type="number" name="team1Score" min={0} max={3} />
-            </Form.Group>
-            <PlayerSection players={players} number={1} />
-            <PlayerSection players={players} number={2} />
-            <PlayerSection players={players} number={3} />
-          </Col>
-          <Col xxl={6} xl={12}>
-            <h4>Team B</h4>
-            <Form.Group>
-              <Form.Label>Set Score</Form.Label>
-              <Form.Control type="number" name="team2Score" min={0} max={3} />
-            </Form.Group>
-            <PlayerSection players={players} number={4} />
-            <PlayerSection players={players} number={5} />
-            <PlayerSection players={players} number={6} />
-          </Col>
-        </Row>
-        <Button type="submit">Create match</Button>
-        {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
-        {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
-      </Form>
-    </div>
+          <Button type="submit">Create match</Button>
+          {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+          {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
+        </Form>
+      </div>
+    </>
   );
 }

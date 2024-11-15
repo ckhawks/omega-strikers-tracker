@@ -73,87 +73,88 @@ export default async function Bans() {
   }, {});
 
   return (
-    <div className={styles.main}>
+    <>
       <NavigationBar />
-
-      {/* Section for Win Rate-Based Bans */}
-      <div>
-        <h1>Bans by Win Rate</h1>
-        <p>
-          Strikers with a win rate at 50% or higher on each map; excluding data
-          from registered players (opponents/randoms only)
-        </p>
-      </div>
-      <div className={styles["maps-container"]}>
-        {Object.entries(bansByMapWinRate).map(([map, strikers]: any) => (
-          <div key={map} className={styles["map-section"]}>
-            <h2>{map}</h2>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Striker</th>
-                  <th>Role</th>
-                  <th>Win Rate (%)</th>
-                  <th>Matches</th>
-                </tr>
-              </thead>
-              <tbody>
-                {strikers.map((striker: any) => (
-                  <tr key={striker.striker}>
-                    <td>
-                      <StrikerAvatar striker={striker.striker} />
-                      {striker.striker}
-                    </td>
-                    <td>{striker.role}</td>
-                    <td>{striker.winRate}%</td>
-                    <td>{striker.matchesPlayed}</td>
+      <div className={styles.main}>
+        {/* Section for Win Rate-Based Bans */}
+        <div>
+          <h1>Bans by Win Rate</h1>
+          <p>
+            Strikers with a win rate at 50% or higher on each map; excluding
+            data from registered players (opponents/randoms only)
+          </p>
+        </div>
+        <div className={styles["maps-container"]}>
+          {Object.entries(bansByMapWinRate).map(([map, strikers]: any) => (
+            <div key={map} className={styles["map-section"]}>
+              <h2>{map}</h2>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Striker</th>
+                    <th>Role</th>
+                    <th>Win Rate (%)</th>
+                    <th>Matches</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ))}
-      </div>
+                </thead>
+                <tbody>
+                  {strikers.map((striker: any) => (
+                    <tr key={striker.striker}>
+                      <td>
+                        <StrikerAvatar striker={striker.striker} />
+                        {striker.striker}
+                      </td>
+                      <td>{striker.role}</td>
+                      <td>{striker.winRate}%</td>
+                      <td>{striker.matchesPlayed}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
 
-      {/* Section for KO-Based Bans */}
-      <br />
-      <div>
-        <h1>Bans by Average KOs</h1>
-        <p>
-          Strikers with an average KO rate of 2.0 or higher on each map;
-          excluding data from registered players (opponents/randoms only)
-        </p>
-      </div>
-      <div className={styles["maps-container"]}>
-        {Object.entries(bansByMapKOs).map(([map, strikers]: any) => (
-          <div key={map} className={styles["map-section"]}>
-            <h2>{map}</h2>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Striker</th>
-                  <th>Role</th>
-                  <th>Avg KOs</th>
-                  <th>Matches</th>
-                </tr>
-              </thead>
-              <tbody>
-                {strikers.map((striker: any) => (
-                  <tr key={striker.striker}>
-                    <td>
-                      <StrikerAvatar striker={striker.striker} />
-                      {striker.striker}
-                    </td>
-                    <td>{striker.role}</td>
-                    <td>{striker.averageKOs}</td>
-                    <td>{striker.matchesPlayed}</td>
+        {/* Section for KO-Based Bans */}
+        <br />
+        <div>
+          <h1>Bans by Average KOs</h1>
+          <p>
+            Strikers with an average KO rate of 2.0 or higher on each map;
+            excluding data from registered players (opponents/randoms only)
+          </p>
+        </div>
+        <div className={styles["maps-container"]}>
+          {Object.entries(bansByMapKOs).map(([map, strikers]: any) => (
+            <div key={map} className={styles["map-section"]}>
+              <h2>{map}</h2>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Striker</th>
+                    <th>Role</th>
+                    <th>Avg KOs</th>
+                    <th>Matches</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ))}
+                </thead>
+                <tbody>
+                  {strikers.map((striker: any) => (
+                    <tr key={striker.striker}>
+                      <td>
+                        <StrikerAvatar striker={striker.striker} />
+                        {striker.striker}
+                      </td>
+                      <td>{striker.role}</td>
+                      <td>{striker.averageKOs}</td>
+                      <td>{striker.matchesPlayed}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

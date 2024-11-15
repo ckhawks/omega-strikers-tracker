@@ -10,22 +10,47 @@
   color: black;
 }
 
+.navbar {
+  background-color: #fb9f00;
+  padding: 32px 64px;
+  border-bottom: 1px solid rgb(202, 202, 202);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .navItem {
   padding: 0.25rem 0.5rem;
-  background-color: rgb(255, 255, 255);
-  color: rgb(109, 109, 109);
+  background-color: #fb9f00;
+  color: rgb(62, 62, 62);
   text-decoration: none;
   border-radius: 8px;
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  display: flex;
   &.active {
-    background-color: rgb(122, 124, 209);
-    color: white;
+    background-color: #1b1b1b;
+    color: rgb(255, 255, 255);
+    font-weight: 600;
   }
 
   &:hover:not(.active) {
-    background-color: rgb(231, 231, 231);
+    background-color: #db8a00;
     color: black;
   }
+}
+
+.navGroup {
+  display: flex;
+  gap: 0.5rem;
+  border: 1px solid rgb(52, 52, 52);
+  background-color: #db8b00;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.navRow {
+  display: flex;
+  align-items: center;
 }
 
 .card {
@@ -187,7 +212,7 @@
 
 /* visualization on the matches page */
 .matchRankSummary {
-  margin: 20px;
+  margin: 20px 0px;
   font-family: Arial, sans-serif;
 }
 
@@ -212,6 +237,7 @@
   background-color: red;
   display: inline-block;
   margin-right: 8px;
+  margin-left: 8px;
 }
 
 .partialDataBox {
@@ -220,6 +246,7 @@
   background-color: orange;
   display: inline-block;
   margin-right: 8px;
+  margin-left: 8px;
 }
 
 .completeDataBox {
@@ -228,6 +255,7 @@
   background-color: green;
   display: inline-block;
   margin-right: 8px;
+  margin-left: 8px;
 }
 
 .perfectBalanceBox {
@@ -236,6 +264,7 @@
   background-color: #4caf50;
   display: inline-block;
   margin-right: 8px;
+  margin-left: 8px;
 }
 
 .slightlyUnevenBox {
@@ -244,6 +273,7 @@
   background-color: #ffc107;
   display: inline-block;
   margin-right: 8px;
+  margin-left: 8px;
 }
 
 .moderatelyUnevenBox {
@@ -252,6 +282,7 @@
   background-color: #ff9800;
   display: inline-block;
   margin-right: 8px;
+  margin-left: 8px;
 }
 
 .highlyUnevenBox {
@@ -260,6 +291,7 @@
   background-color: #f44336;
   display: inline-block;
   margin-right: 8px;
+  margin-left: 8px;
 }
 
 .subtext {
@@ -276,4 +308,12 @@
 
 .losingTeam {
   background-color: #f8d7da !important; // Light red for the losing team
+}
+
+.navBeta {
+  font-size: 10px;
+  text-align: start;
+  align-self: flex-start;
+  justify-self: start;
+  margin-left: 2px;
 }

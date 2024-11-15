@@ -96,159 +96,163 @@ ORDER BY mp."teamNumber";
   const formattedDate = match.createdAt.toLocaleDateString("en-US", options);
 
   return (
-    <div className={styles.main}>
+    <>
       <NavigationBar />
-      {/* <h1>Match Details</h1> */}
-      <h1>
-        Match: {match.map} on {formattedDate}
-      </h1>
-      {/* Display balance details */}
-      <div className={styles.balanceInfo}>
-        <h3>Match Balance Details</h3>
-        <p>
-          <strong>Team 1 Avg Rank: </strong>{" "}
-          {match.team1_avg_rank ? (
-            <>
-              <img
-                src={`/rank_images/${
-                  // @ts-ignore
-                  RANKS[Math.round(match.team1_avg_rank)].imagePath
-                }`}
-                width={32}
-                style={{ marginRight: "8px" }}
-              />
-              {
-                // @ts-ignore
-                RANKS[Math.round(match.team1_avg_rank)].name ?? "N/A"
-              }{" "}
-              ({Number(match.team1_avg_rank).toFixed(2)})
-            </>
-          ) : (
-            "N/A"
-          )}
-        </p>
-        <p>
-          <strong>Team 2 Avg Rank: </strong>{" "}
-          {match.team2_avg_rank ? (
-            <>
-              <img
-                src={`/rank_images/${
-                  // @ts-ignore
-                  RANKS[Math.round(match.team2_avg_rank)].imagePath
-                }`}
-                width={32}
-                style={{ marginRight: "8px" }}
-              />
-              {
-                // @ts-ignore
-                RANKS[Math.round(match.team2_avg_rank)].name ?? "N/A"
-              }{" "}
-              ({Number(match.team2_avg_rank).toFixed(2)})
-            </>
-          ) : (
-            "N/A"
-          )}
-        </p>
-        <p>
-          <strong>Rank Difference: </strong>{" "}
-          {match.rank_diff ? Number(match.rank_diff).toFixed(2) : "N/A"}
-        </p>
-        <p>
-          <strong>Balance Level: </strong>
-          {(match.rank_diff && getRankBalanceLabel(match.rank_diff)) ??
-            "Not enough data"}
-        </p>
-      </div>
-      <div>
-        {/* <div>
-          <strong>Match ID:</strong> {params.matchId}
-        </div> */}
-        <div>
-          <strong>Map:</strong> {match.map}
-        </div>
-        <div>
-          <strong>Team 1 Score:</strong> {match.team1Score}
-        </div>
-        <div>
-          <strong>Team 2 Score:</strong> {match.team2Score}
-        </div>
-        <div>
-          <strong>Duration: </strong>
-          {match.duration !== 0
-            ? `${Math.floor(match.duration / 60).toLocaleString("en-US", {
-                minimumIntegerDigits: 2,
-                useGrouping: false,
-              })}:${(match.duration % 60).toLocaleString("en-US", {
-                minimumIntegerDigits: 2,
-                useGrouping: false,
-              })}`
-            : "Unknown"}
-        </div>
-      </div>
-
-      <h3>Player Stats</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Team</th>
-            <th>Player</th>
-            <th>Striker</th>
-            <th>Role</th>
-            <th>Goals</th>
-            <th>Assists</th>
-            <th>Saves</th>
-            <th>KOs</th>
-            <th>Damage</th>
-            <th>Dmg per KO</th>
-            <th>Shots</th>
-            <th>Redirects</th>
-            <th>Orbs</th>
-            <th>Rank</th>
-          </tr>
-        </thead>
-        <tbody>
-          {players.map((player: any, index: number) => (
-            <tr key={index}>
-              <td>{player.teamNumber}</td>
-              <td>{player.name ? player.name : "Anonymous"}</td>
-
-              <td>
-                <StrikerAvatar striker={player.striker as string} />
-
-                {player.striker}
-              </td>
-              <td>{player.wasGoalie ? "Goalie" : "Forward"}</td>
-              <td>{player.statGoals}</td>
-              <td>{player.statAssists}</td>
-              <td>{player.statSaves}</td>
-              <td>{player.statKnockouts}</td>
-              <td>{player.statDamage}</td>
-              <td>
-                {isFinite(Math.round(player.statDamage / player.statKnockouts))
-                  ? Math.round(player.statDamage / player.statKnockouts)
-                  : "N/A"}
-              </td>
-              <td>{player.statShots}</td>
-              <td>{player.statRedirects}</td>
-              <td>{player.statOrbs}</td>
-              <td>
+      <div className={styles.main}>
+        {/* <h1>Match Details</h1> */}
+        <h1>
+          Match: {match.map} on {formattedDate}
+        </h1>
+        {/* Display balance details */}
+        <div className={styles.balanceInfo}>
+          <h3>Match Balance Details</h3>
+          <p>
+            <strong>Team 1 Avg Rank: </strong>{" "}
+            {match.team1_avg_rank ? (
+              <>
                 <img
                   src={`/rank_images/${
                     // @ts-ignore
-                    RANKS[Math.round(player.rank)].imagePath
+                    RANKS[Math.round(match.team1_avg_rank)].imagePath
                   }`}
                   width={32}
                   style={{ marginRight: "8px" }}
                 />
                 {
                   // @ts-ignore
-                  RANKS[Math.round(player.rank)].name ?? "N/A"
-                }
-              </td>
+                  RANKS[Math.round(match.team1_avg_rank)].name ?? "N/A"
+                }{" "}
+                ({Number(match.team1_avg_rank).toFixed(2)})
+              </>
+            ) : (
+              "N/A"
+            )}
+          </p>
+          <p>
+            <strong>Team 2 Avg Rank: </strong>{" "}
+            {match.team2_avg_rank ? (
+              <>
+                <img
+                  src={`/rank_images/${
+                    // @ts-ignore
+                    RANKS[Math.round(match.team2_avg_rank)].imagePath
+                  }`}
+                  width={32}
+                  style={{ marginRight: "8px" }}
+                />
+                {
+                  // @ts-ignore
+                  RANKS[Math.round(match.team2_avg_rank)].name ?? "N/A"
+                }{" "}
+                ({Number(match.team2_avg_rank).toFixed(2)})
+              </>
+            ) : (
+              "N/A"
+            )}
+          </p>
+          <p>
+            <strong>Rank Difference: </strong>{" "}
+            {match.rank_diff ? Number(match.rank_diff).toFixed(2) : "N/A"}
+          </p>
+          <p>
+            <strong>Balance Level: </strong>
+            {(match.rank_diff && getRankBalanceLabel(match.rank_diff)) ??
+              "Not enough data"}
+          </p>
+        </div>
+        <div>
+          {/* <div>
+          <strong>Match ID:</strong> {params.matchId}
+        </div> */}
+          <div>
+            <strong>Map:</strong> {match.map}
+          </div>
+          <div>
+            <strong>Team 1 Score:</strong> {match.team1Score}
+          </div>
+          <div>
+            <strong>Team 2 Score:</strong> {match.team2Score}
+          </div>
+          <div>
+            <strong>Duration: </strong>
+            {match.duration !== 0
+              ? `${Math.floor(match.duration / 60).toLocaleString("en-US", {
+                  minimumIntegerDigits: 2,
+                  useGrouping: false,
+                })}:${(match.duration % 60).toLocaleString("en-US", {
+                  minimumIntegerDigits: 2,
+                  useGrouping: false,
+                })}`
+              : "Unknown"}
+          </div>
+        </div>
+
+        <h3>Player Stats</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Team</th>
+              <th>Player</th>
+              <th>Striker</th>
+              <th>Role</th>
+              <th>Goals</th>
+              <th>Assists</th>
+              <th>Saves</th>
+              <th>KOs</th>
+              <th>Damage</th>
+              <th>Dmg per KO</th>
+              <th>Shots</th>
+              <th>Redirects</th>
+              <th>Orbs</th>
+              <th>Rank</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {players.map((player: any, index: number) => (
+              <tr key={index}>
+                <td>{player.teamNumber}</td>
+                <td>{player.name ? player.name : "Anonymous"}</td>
+
+                <td>
+                  <StrikerAvatar striker={player.striker as string} />
+
+                  {player.striker}
+                </td>
+                <td>{player.wasGoalie ? "Goalie" : "Forward"}</td>
+                <td>{player.statGoals}</td>
+                <td>{player.statAssists}</td>
+                <td>{player.statSaves}</td>
+                <td>{player.statKnockouts}</td>
+                <td>{player.statDamage}</td>
+                <td>
+                  {isFinite(
+                    Math.round(player.statDamage / player.statKnockouts)
+                  )
+                    ? Math.round(player.statDamage / player.statKnockouts)
+                    : "N/A"}
+                </td>
+                <td>{player.statShots}</td>
+                <td>{player.statRedirects}</td>
+                <td>{player.statOrbs}</td>
+                <td>
+                  <img
+                    src={`/rank_images/${
+                      // @ts-ignore
+                      RANKS[Math.round(player.rank)].imagePath
+                    }`}
+                    width={32}
+                    style={{ marginRight: "8px" }}
+                  />
+                  {
+                    // @ts-ignore
+                    RANKS[Math.round(player.rank)].name ?? "N/A"
+                  }
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

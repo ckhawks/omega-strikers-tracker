@@ -81,109 +81,111 @@ export default async function GlobalStats() {
   );
 
   return (
-    <div className={styles.main}>
+    <>
       <NavigationBar />
-      <h1>Global Stats</h1>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <h3>Global Map Stats - Win Rate by Striker and Role</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Map</th>
-              <th>Role</th>
-              <th>Striker</th>
-              <th>Win Rate (%)</th>
-              <th>Matches</th>
-              <th>
-                <Tooltip
-                  text={"Percent of the matches played by a registered user"}
-                >
-                  <span className={styles["tooltippable"]}>Friendly (%)</span>
-                </Tooltip>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {globalMapStats.map(
-              ([mapName, { totalMatches, Forwards, Goalies }]) => (
-                <>
-                  {/* Forwards */}
-                  {Forwards.map(
-                    (
-                      {
-                        striker,
-                        matchesPlayed,
-                        wins,
-                        winRate,
-                        friendlyRate,
-                      }: {
-                        striker: any;
-                        matchesPlayed: number;
-                        wins: number;
-                        winRate: number;
-                        friendlyRate: number;
-                      },
-                      index: number
-                    ) => (
-                      <tr key={`${mapName}-forward-${index}`}>
-                        <td>
-                          {index === 0
-                            ? `${mapName} - ${totalMatches / 6} matches`
-                            : ""}
-                        </td>
-                        <td>Forward</td>
-                        <td>
-                          <StrikerAvatar striker={striker} />
-                          {striker}
-                        </td>
-                        <td>{winRate}%</td>
-                        <td>{matchesPlayed}</td>
-                        <td>{friendlyRate}%</td>
-                      </tr>
-                    )
-                  )}
+      <div className={styles.main}>
+        <h1>Global Stats</h1>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <h3>Global Map Stats - Win Rate by Striker and Role</h3>
+          <table style={{ maxWidth: "900px" }}>
+            <thead>
+              <tr>
+                <th>Map</th>
+                <th>Role</th>
+                <th>Striker</th>
+                <th>Win Rate (%)</th>
+                <th>Matches</th>
+                <th>
+                  <Tooltip
+                    text={"Percent of the matches played by a registered user"}
+                  >
+                    <span className={styles["tooltippable"]}>Friendly (%)</span>
+                  </Tooltip>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {globalMapStats.map(
+                ([mapName, { totalMatches, Forwards, Goalies }]) => (
+                  <>
+                    {/* Forwards */}
+                    {Forwards.map(
+                      (
+                        {
+                          striker,
+                          matchesPlayed,
+                          wins,
+                          winRate,
+                          friendlyRate,
+                        }: {
+                          striker: any;
+                          matchesPlayed: number;
+                          wins: number;
+                          winRate: number;
+                          friendlyRate: number;
+                        },
+                        index: number
+                      ) => (
+                        <tr key={`${mapName}-forward-${index}`}>
+                          <td>
+                            {index === 0
+                              ? `${mapName} - ${totalMatches / 6} matches`
+                              : ""}
+                          </td>
+                          <td>Forward</td>
+                          <td>
+                            <StrikerAvatar striker={striker} />
+                            {striker}
+                          </td>
+                          <td>{winRate}%</td>
+                          <td>{matchesPlayed}</td>
+                          <td>{friendlyRate}%</td>
+                        </tr>
+                      )
+                    )}
 
-                  {/* Goalies */}
-                  {Goalies.map(
-                    (
-                      {
-                        striker,
-                        matchesPlayed,
-                        wins,
-                        winRate,
-                        friendlyRate,
-                      }: {
-                        striker: any;
-                        matchesPlayed: number;
-                        wins: number;
-                        winRate: number;
-                        friendlyRate: number;
-                      },
-                      index: number
-                    ) => (
-                      <tr key={`${mapName}-goalie-${index}`}>
-                        <td>
-                          {index === 0 && Forwards.length === 0
-                            ? `${mapName} - ${totalMatches / 6} matches`
-                            : ""}
-                        </td>
-                        <td>Goalie</td>
-                        <td>
-                          <StrikerAvatar striker={striker} />
-                          {striker}
-                        </td>
-                        <td>{winRate}%</td>
-                        <td>{matchesPlayed}</td>
-                        <td>{friendlyRate}%</td>
-                      </tr>
-                    )
-                  )}
-                </>
-              )
-            )}
-          </tbody>
-        </table>
+                    {/* Goalies */}
+                    {Goalies.map(
+                      (
+                        {
+                          striker,
+                          matchesPlayed,
+                          wins,
+                          winRate,
+                          friendlyRate,
+                        }: {
+                          striker: any;
+                          matchesPlayed: number;
+                          wins: number;
+                          winRate: number;
+                          friendlyRate: number;
+                        },
+                        index: number
+                      ) => (
+                        <tr key={`${mapName}-goalie-${index}`}>
+                          <td>
+                            {index === 0 && Forwards.length === 0
+                              ? `${mapName} - ${totalMatches / 6} matches`
+                              : ""}
+                          </td>
+                          <td>Goalie</td>
+                          <td>
+                            <StrikerAvatar striker={striker} />
+                            {striker}
+                          </td>
+                          <td>{winRate}%</td>
+                          <td>{matchesPlayed}</td>
+                          <td>{friendlyRate}%</td>
+                        </tr>
+                      )
+                    )}
+                  </>
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

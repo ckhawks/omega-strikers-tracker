@@ -9,10 +9,12 @@ export default async function DraftToolPage() {
   const players = await db(`SELECT * FROM "Player"`, []);
 
   return (
-    <div className={styles.main}>
+    <>
       <NavigationBar />
-      <h1>Draft Assistant</h1>
-      <DraftTool players={players} />
-    </div>
+      <div className={styles.main}>
+        <h1>Draft Assistant</h1>
+        <DraftTool players={players} />
+      </div>
+    </>
   );
 }

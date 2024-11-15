@@ -130,16 +130,18 @@ export default async function StrikersList({
   );
 
   return (
-    <div className={styles.main}>
+    <>
       <NavigationBar />
-      <StrikersTable
-        combinedStats={combinedStats}
-        forwardStats={forwardStats}
-        goalieStats={goalieStats}
-        excludeFriendlies={excludeFriendlies}
-      />
-      <h2>Striker Win Rates by Map</h2>
-      <StrikerWinRates strikerWinRates={strikerWinRates} />
-    </div>
+      <div className={styles.main}>
+        <StrikersTable
+          combinedStats={combinedStats}
+          forwardStats={forwardStats}
+          goalieStats={goalieStats}
+          excludeFriendlies={excludeFriendlies}
+        />
+        <h2>Striker Win Rates by Map</h2>
+        <StrikerWinRates strikerWinRates={strikerWinRates} />
+      </div>
+    </>
   );
 }

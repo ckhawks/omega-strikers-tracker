@@ -365,236 +365,326 @@ export default async function PlayerDetails({
   );
 
   return (
-    <div className={styles.main}>
+    <>
       <NavigationBar />
-      <div style={{ display: "flex", flexDirection: "column", gap: "0px" }}>
-        <BackButton to={"/players"} text={"All players"} />
-        <h1>{player.name}</h1>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <div>
-          Winrate: {player.winRate}% - {player.totalWins} W {player.totalLosses}{" "}
-          L
+      <div className={styles.main}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0px" }}>
+          <BackButton to={"/players"} text={"All players"} />
+          <h1>{player.name}</h1>
         </div>
-        <div>Matches played: {player.totalMatches}</div>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <h3>Strikers</h3>
-        <div>
-          <h6>Top Strikers</h6>
-          <ol>
-            {player.topStrikers &&
-              player.topStrikers.map((striker: any) => {
-                return (
-                  <li key={striker.striker}>
-                    <StrikerAvatar striker={striker.striker as string} />
-                    {striker.striker}. Played {striker.timesPlayed} times,{" "}
-                    {striker.wins} wins, {striker.winRate}% Winrate
-                  </li>
-                );
-              })}
-          </ol>
-        </div>
-
-        {playerRoleStats && (
-          <div>
-            <div>Played forward: {playerRoleStats[0].timesPlayedForward}</div>
-            <div>Played goalie: {playerRoleStats[0].timesPlayedGoalie}</div>
-          </div>
-        )}
-      </div>
-      {playerMapStrikers && (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <h3>Maps</h3>
-          <table>
-            <tbody>
-              <tr>
-                <th>Map</th>
-                <th>Winrate</th>
-                <th>Matches</th>
-                {/* <th>Wins</th> */}
-                <th>Wins - Forwards</th>
-                <th>Losses - Forwards</th>
-                <th>Wins - Goalies</th>
-                <th>Losses - Goalies</th>
-              </tr>
-
-              {player.topMaps &&
-                player.topMaps.map((map: any) => {
-                  const mapStrikerData = mapStrikers.find(
-                    ([mapName]) => mapName === map.map
-                  );
-                  const {
-                    Wins = { Forwards: [], Goalies: [] },
-                    Losses = { Forwards: [], Goalies: [] },
-                  } = mapStrikerData ? mapStrikerData[1] : {};
-
+          <div>
+            Winrate: {player.winRate}% - {player.totalWins} W{" "}
+            {player.totalLosses} L
+          </div>
+          <div>Matches played: {player.totalMatches}</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <h3>Strikers</h3>
+          <div>
+            <h6>Top Strikers</h6>
+            <ol>
+              {player.topStrikers &&
+                player.topStrikers.map((striker: any) => {
                   return (
-                    <tr key={map.map}>
-                      <td>{map.map}</td>
-                      <td>{map.winRate}%</td>
-                      <td>{map.matchesPlayed}</td>
-                      {/* <td>{map.wins}</td> */}
-
-                      {/* Wins - Forwards */}
-                      <td>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          {Wins.Forwards.length > 0 ? (
-                            Wins.Forwards.map(
-                              (
-                                {
-                                  striker,
-                                  count,
-                                }: { striker: any; count: number },
-                                index: number
-                              ) => (
-                                <div
-                                  key={index}
-                                  style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <StrikerAvatar
-                                    striker={striker}
-                                    rightMargin={false}
-                                  />
-                                  <span style={{ fontSize: "12px" }}>
-                                    {count}x
-                                  </span>
-                                </div>
-                              )
-                            )
-                          ) : (
-                            <p>N/A</p>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Losses - Forwards */}
-                      <td>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          {Losses.Forwards.length > 0 ? (
-                            Losses.Forwards.map(
-                              (
-                                {
-                                  striker,
-                                  count,
-                                }: { striker: any; count: number },
-                                index: number
-                              ) => (
-                                <div
-                                  key={index}
-                                  style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <StrikerAvatar
-                                    striker={striker}
-                                    rightMargin={false}
-                                  />
-                                  <span style={{ fontSize: "12px" }}>
-                                    {count}x
-                                  </span>
-                                </div>
-                              )
-                            )
-                          ) : (
-                            <p>N/A</p>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Wins - Goalies */}
-                      <td>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          {Wins.Goalies.length > 0 ? (
-                            Wins.Goalies.map(
-                              (
-                                {
-                                  striker,
-                                  count,
-                                }: { striker: any; count: number },
-                                index: number
-                              ) => (
-                                <div
-                                  key={index}
-                                  style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <StrikerAvatar
-                                    striker={striker}
-                                    rightMargin={false}
-                                  />
-                                  <span style={{ fontSize: "12px" }}>
-                                    {count}x
-                                  </span>
-                                </div>
-                              )
-                            )
-                          ) : (
-                            <p>N/A</p>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Losses - Goalies */}
-                      <td>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          {Losses.Goalies.length > 0 ? (
-                            Losses.Goalies.map(
-                              (
-                                {
-                                  striker,
-                                  count,
-                                }: { striker: any; count: number },
-                                index: number
-                              ) => (
-                                <div
-                                  key={index}
-                                  style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  <StrikerAvatar
-                                    striker={striker}
-                                    rightMargin={false}
-                                  />
-                                  <span style={{ fontSize: "12px" }}>
-                                    {count}x
-                                  </span>
-                                </div>
-                              )
-                            )
-                          ) : (
-                            <p>N/A</p>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+                    <li key={striker.striker}>
+                      <StrikerAvatar striker={striker.striker as string} />
+                      {striker.striker}. Played {striker.timesPlayed} times,{" "}
+                      {striker.wins} wins, {striker.winRate}% Winrate
+                    </li>
                   );
                 })}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </ol>
+          </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <h3>Statistics</h3>
-        {playerStats && (
+          {playerRoleStats && (
+            <div>
+              <div>Played forward: {playerRoleStats[0].timesPlayedForward}</div>
+              <div>Played goalie: {playerRoleStats[0].timesPlayedGoalie}</div>
+            </div>
+          )}
+        </div>
+        {playerMapStrikers && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <h3>Maps</h3>
+            <table>
+              <tbody>
+                <tr>
+                  <th>Map</th>
+                  <th>Winrate</th>
+                  <th>Matches</th>
+                  {/* <th>Wins</th> */}
+                  <th>Wins - Forwards</th>
+                  <th>Losses - Forwards</th>
+                  <th>Wins - Goalies</th>
+                  <th>Losses - Goalies</th>
+                </tr>
+
+                {player.topMaps &&
+                  player.topMaps.map((map: any) => {
+                    const mapStrikerData = mapStrikers.find(
+                      ([mapName]) => mapName === map.map
+                    );
+                    const {
+                      Wins = { Forwards: [], Goalies: [] },
+                      Losses = { Forwards: [], Goalies: [] },
+                    } = mapStrikerData ? mapStrikerData[1] : {};
+
+                    return (
+                      <tr key={map.map}>
+                        <td>{map.map}</td>
+                        <td>{map.winRate}%</td>
+                        <td>{map.matchesPlayed}</td>
+                        {/* <td>{map.wins}</td> */}
+
+                        {/* Wins - Forwards */}
+                        <td>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            {Wins.Forwards.length > 0 ? (
+                              Wins.Forwards.map(
+                                (
+                                  {
+                                    striker,
+                                    count,
+                                  }: { striker: any; count: number },
+                                  index: number
+                                ) => (
+                                  <div
+                                    key={index}
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <StrikerAvatar
+                                      striker={striker}
+                                      rightMargin={false}
+                                    />
+                                    <span style={{ fontSize: "12px" }}>
+                                      {count}x
+                                    </span>
+                                  </div>
+                                )
+                              )
+                            ) : (
+                              <p>N/A</p>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Losses - Forwards */}
+                        <td>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            {Losses.Forwards.length > 0 ? (
+                              Losses.Forwards.map(
+                                (
+                                  {
+                                    striker,
+                                    count,
+                                  }: { striker: any; count: number },
+                                  index: number
+                                ) => (
+                                  <div
+                                    key={index}
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <StrikerAvatar
+                                      striker={striker}
+                                      rightMargin={false}
+                                    />
+                                    <span style={{ fontSize: "12px" }}>
+                                      {count}x
+                                    </span>
+                                  </div>
+                                )
+                              )
+                            ) : (
+                              <p>N/A</p>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Wins - Goalies */}
+                        <td>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            {Wins.Goalies.length > 0 ? (
+                              Wins.Goalies.map(
+                                (
+                                  {
+                                    striker,
+                                    count,
+                                  }: { striker: any; count: number },
+                                  index: number
+                                ) => (
+                                  <div
+                                    key={index}
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <StrikerAvatar
+                                      striker={striker}
+                                      rightMargin={false}
+                                    />
+                                    <span style={{ fontSize: "12px" }}>
+                                      {count}x
+                                    </span>
+                                  </div>
+                                )
+                              )
+                            ) : (
+                              <p>N/A</p>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Losses - Goalies */}
+                        <td>
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            {Losses.Goalies.length > 0 ? (
+                              Losses.Goalies.map(
+                                (
+                                  {
+                                    striker,
+                                    count,
+                                  }: { striker: any; count: number },
+                                  index: number
+                                ) => (
+                                  <div
+                                    key={index}
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <StrikerAvatar
+                                      striker={striker}
+                                      rightMargin={false}
+                                    />
+                                    <span style={{ fontSize: "12px" }}>
+                                      {count}x
+                                    </span>
+                                  </div>
+                                )
+                              )
+                            ) : (
+                              <p>N/A</p>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <h3>Statistics</h3>
+          {playerStats && (
+            <div>
+              <table>
+                <tbody>
+                  <tr>
+                    <th>Format</th>
+                    <th>Goals</th>
+                    <th>Assists</th>
+                    <th>Saves</th>
+                    <th>KOs</th>
+                    <th>Damage</th>
+                    <th>Dmg per KO</th>
+                    <th>Shots</th>
+                    <th>Redirects</th>
+                    <th>Orbs</th>
+                  </tr>
+                  <tr>
+                    <td>Average per match</td>
+                    <td>{playerStats.averageGoalsPerMatch}</td>
+                    <td>{playerStats.averageAssistsPerMatch}</td>
+                    <td>{playerStats.averageSavesPerMatch}</td>
+                    <td>{playerStats.averageKnockoutsPerMatch}</td>
+                    <td>{Math.round(playerStats.averageDamagePerMatch)}</td>
+                    <td>
+                      {Math.round(
+                        playerStats.averageDamagePerMatch /
+                          playerStats.averageKnockoutsPerMatch
+                      )}
+                    </td>
+                    <td>{playerStats.averageShotsPerMatch}</td>
+                    <td>{playerStats.averageRedirectsPerMatch}</td>
+                    <td>{playerStats.averageOrbsPerMatch}</td>
+                  </tr>
+                  <tr>
+                    <td>Average per set</td>
+                    <td>{playerStats.averageGoalsPerSet}</td>
+                    <td>{playerStats.averageAssistsPerSet}</td>
+                    <td>{playerStats.averageSavesPerSet}</td>
+                    <td>{playerStats.averageKnockoutsPerSet}</td>
+                    <td>{Math.round(playerStats.averageDamagePerSet)}</td>
+                    <td>
+                      {Math.round(
+                        playerStats.averageDamagePerSet /
+                          playerStats.averageKnockoutsPerSet
+                      )}
+                    </td>
+                    <td>{playerStats.averageShotsPerSet}</td>
+                    <td>{playerStats.averageRedirectsPerSet}</td>
+                    <td>{playerStats.averageOrbsPerSet}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {playerStatsPerMinute && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <h3>Statistics Per Minute</h3>
+            <table>
+              <tbody>
+                <tr>
+                  <th>Goals</th>
+                  <th>Assists</th>
+                  <th>Saves</th>
+                  <th>KOs</th>
+                  <th>Damage</th>
+                  <th>Shots</th>
+                  <th>Redirects</th>
+                  <th>Orbs</th>
+                </tr>
+                <tr>
+                  <td>{playerStatsPerMinute.goalsPerMinute}</td>
+                  <td>{playerStatsPerMinute.assistsPerMinute}</td>
+                  <td>{playerStatsPerMinute.savesPerMinute}</td>
+                  <td>{playerStatsPerMinute.knockoutsPerMinute}</td>
+                  <td>{Math.round(playerStatsPerMinute.damagePerMinute)}</td>
+                  <td>{playerStatsPerMinute.shotsPerMinute}</td>
+                  <td>{playerStatsPerMinute.redirectsPerMinute}</td>
+                  <td>{playerStatsPerMinute.orbsPerMinute}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <h3>Average Stats Per Striker</h3>
           <div>
             <table>
               <tbody>
                 <tr>
-                  <th>Format</th>
+                  <th>Striker</th>
+                  <th>Winrate</th>
+                  <th>Matches</th>
                   <th>Goals</th>
                   <th>Assists</th>
                   <th>Saves</th>
@@ -605,214 +695,130 @@ export default async function PlayerDetails({
                   <th>Redirects</th>
                   <th>Orbs</th>
                 </tr>
-                <tr>
-                  <td>Average per match</td>
-                  <td>{playerStats.averageGoalsPerMatch}</td>
-                  <td>{playerStats.averageAssistsPerMatch}</td>
-                  <td>{playerStats.averageSavesPerMatch}</td>
-                  <td>{playerStats.averageKnockoutsPerMatch}</td>
-                  <td>{Math.round(playerStats.averageDamagePerMatch)}</td>
-                  <td>
-                    {Math.round(
-                      playerStats.averageDamagePerMatch /
-                        playerStats.averageKnockoutsPerMatch
-                    )}
-                  </td>
-                  <td>{playerStats.averageShotsPerMatch}</td>
-                  <td>{playerStats.averageRedirectsPerMatch}</td>
-                  <td>{playerStats.averageOrbsPerMatch}</td>
-                </tr>
-                <tr>
-                  <td>Average per set</td>
-                  <td>{playerStats.averageGoalsPerSet}</td>
-                  <td>{playerStats.averageAssistsPerSet}</td>
-                  <td>{playerStats.averageSavesPerSet}</td>
-                  <td>{playerStats.averageKnockoutsPerSet}</td>
-                  <td>{Math.round(playerStats.averageDamagePerSet)}</td>
-                  <td>
-                    {Math.round(
-                      playerStats.averageDamagePerSet /
-                        playerStats.averageKnockoutsPerSet
-                    )}
-                  </td>
-                  <td>{playerStats.averageShotsPerSet}</td>
-                  <td>{playerStats.averageRedirectsPerSet}</td>
-                  <td>{playerStats.averageOrbsPerSet}</td>
-                </tr>
+                {player.topStrikers &&
+                  player.topStrikers.map((striker: any) => (
+                    <tr key={striker.striker}>
+                      <td>
+                        <StrikerAvatar striker={striker.striker} />
+                        {striker.striker}
+                      </td>
+                      <td>{striker.winRate}%</td>
+                      <td>{striker.timesPlayed}</td>
+                      <td>{striker.averageGoals}</td>
+                      <td>{striker.averageAssists}</td>
+                      <td>{striker.averageSaves}</td>
+                      <td>{striker.averageKnockouts}</td>
+                      <td>{Math.round(striker.averageDamage)}</td>
+                      <td>{Math.round(striker.averageDamagePerKnockout)}</td>
+                      <td>{striker.averageShots}</td>
+                      <td>{striker.averageRedirects}</td>
+                      <td>{striker.averageOrbs}</td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
-        )}
-      </div>
-
-      {playerStatsPerMinute && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          <h3>Statistics Per Minute</h3>
-          <table>
-            <tbody>
-              <tr>
-                <th>Goals</th>
-                <th>Assists</th>
-                <th>Saves</th>
-                <th>KOs</th>
-                <th>Damage</th>
-                <th>Shots</th>
-                <th>Redirects</th>
-                <th>Orbs</th>
-              </tr>
-              <tr>
-                <td>{playerStatsPerMinute.goalsPerMinute}</td>
-                <td>{playerStatsPerMinute.assistsPerMinute}</td>
-                <td>{playerStatsPerMinute.savesPerMinute}</td>
-                <td>{playerStatsPerMinute.knockoutsPerMinute}</td>
-                <td>{Math.round(playerStatsPerMinute.damagePerMinute)}</td>
-                <td>{playerStatsPerMinute.shotsPerMinute}</td>
-                <td>{playerStatsPerMinute.redirectsPerMinute}</td>
-                <td>{playerStatsPerMinute.orbsPerMinute}</td>
-              </tr>
-            </tbody>
-          </table>
         </div>
-      )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <h3>Average Stats Per Striker</h3>
         <div>
-          <table>
-            <tbody>
-              <tr>
-                <th>Striker</th>
-                <th>Winrate</th>
-                <th>Matches</th>
-                <th>Goals</th>
-                <th>Assists</th>
-                <th>Saves</th>
-                <th>KOs</th>
-                <th>Damage</th>
-                <th>Dmg per KO</th>
-                <th>Shots</th>
-                <th>Redirects</th>
-                <th>Orbs</th>
-              </tr>
-              {player.topStrikers &&
-                player.topStrikers.map((striker: any) => (
-                  <tr key={striker.striker}>
-                    <td>
-                      <StrikerAvatar striker={striker.striker} />
-                      {striker.striker}
-                    </td>
-                    <td>{striker.winRate}%</td>
-                    <td>{striker.timesPlayed}</td>
-                    <td>{striker.averageGoals}</td>
-                    <td>{striker.averageAssists}</td>
-                    <td>{striker.averageSaves}</td>
-                    <td>{striker.averageKnockouts}</td>
-                    <td>{Math.round(striker.averageDamage)}</td>
-                    <td>{Math.round(striker.averageDamagePerKnockout)}</td>
-                    <td>{striker.averageShots}</td>
-                    <td>{striker.averageRedirects}</td>
-                    <td>{striker.averageOrbs}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+          <h2>Player Match History</h2>
+          <p>{matches.length} matches</p>
+        </div>
+        <div className={styles.matchList}>
+          {matches.map((match) => (
+            <div
+              key={match.matchId}
+              className={`${styles.matchCard} ${
+                match.result === "Win" ? styles.win : styles.loss
+              }`}
+            >
+              <div style={{ width: "100%", marginRight: "2rem" }}>
+                <div className={styles.matchHeader}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "1rem",
+                    }}
+                  >
+                    <h3 style={{ marginBottom: "0" }}>
+                      <span>{match.score}</span> {match.result}
+                    </h3>
+                    <div>{match.map}</div>
+                  </div>
+                  <div>
+                    <strong>Duration:</strong> {Math.floor(match.length / 60)}m{" "}
+                    {Math.floor(match.length % 60)}s
+                  </div>
+                </div>
+                <div className={styles.matchDetails}>
+                  <div>
+                    <StrikerAvatar striker={match.striker} /> {match.striker}
+                    {" — "}
+                    {match.role ? "Goalie" : "Forward"}
+                    <p style={{ marginTop: ".5rem" }}>
+                      <span>Performance:</span> {match.redirectRank} / 6
+                    </p>
+                  </div>
+
+                  <div className={styles.teammates}>
+                    <h3>Teammates</h3>
+                    <ul>
+                      {match.teammates &&
+                        match.teammates.map((teammate: any, index: number) => (
+                          <li key={index}>
+                            <StrikerAvatar striker={teammate.striker} />{" "}
+                            {teammate.striker}
+                            {" — "}
+                            {teammate.role ? "Goalie" : "Forward"}
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+
+                  <div className={styles.enemies}>
+                    <h3>Enemies</h3>
+                    <ul>
+                      {match.enemies &&
+                        match.enemies.map((enemy: any, index: number) => (
+                          <li key={index}>
+                            <StrikerAvatar striker={enemy.striker} />{" "}
+                            {enemy.striker}
+                            {" — "}
+                            {enemy.role ? "Goalie" : "Forward"}
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <center>
+                      <img
+                        src={`/rank_images/${
+                          // @ts-ignore
+                          RANKS[Math.round(match.averageRank)].imagePath
+                        }`}
+                        width={64}
+                      />
+                      <br />
+                      {
+                        // @ts-ignore
+                        RANKS[Math.round(match.averageRank)].name ?? "N/A"
+                      }
+                      <p style={{ color: "grey" }}>
+                        ({match.rankedPlayersCount} ranks)
+                      </p>
+                    </center>
+                  </div>
+                </div>
+              </div>
+              <a href={`/match/${match.matchId}`} className={styles.matchLink}>
+                View Match
+              </a>
+            </div>
+          ))}
         </div>
       </div>
-
-      <div>
-        <h2>Player Match History</h2>
-        <p>{matches.length} matches</p>
-      </div>
-      <div className={styles.matchList}>
-        {matches.map((match) => (
-          <div
-            key={match.matchId}
-            className={`${styles.matchCard} ${
-              match.result === "Win" ? styles.win : styles.loss
-            }`}
-          >
-            <div style={{ width: "100%", marginRight: "2rem" }}>
-              <div className={styles.matchHeader}>
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "1rem" }}
-                >
-                  <h3 style={{ marginBottom: "0" }}>
-                    <span>{match.score}</span> {match.result}
-                  </h3>
-                  <div>{match.map}</div>
-                </div>
-                <div>
-                  <strong>Duration:</strong> {Math.floor(match.length / 60)}m{" "}
-                  {Math.floor(match.length % 60)}s
-                </div>
-              </div>
-              <div className={styles.matchDetails}>
-                <div>
-                  <StrikerAvatar striker={match.striker} /> {match.striker}
-                  {" — "}
-                  {match.role ? "Goalie" : "Forward"}
-                  <p style={{ marginTop: ".5rem" }}>
-                    <span>Performance:</span> {match.redirectRank} / 6
-                  </p>
-                </div>
-
-                <div className={styles.teammates}>
-                  <h3>Teammates</h3>
-                  <ul>
-                    {match.teammates &&
-                      match.teammates.map((teammate: any, index: number) => (
-                        <li key={index}>
-                          <StrikerAvatar striker={teammate.striker} />{" "}
-                          {teammate.striker}
-                          {" — "}
-                          {teammate.role ? "Goalie" : "Forward"}
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-
-                <div className={styles.enemies}>
-                  <h3>Enemies</h3>
-                  <ul>
-                    {match.enemies &&
-                      match.enemies.map((enemy: any, index: number) => (
-                        <li key={index}>
-                          <StrikerAvatar striker={enemy.striker} />{" "}
-                          {enemy.striker}
-                          {" — "}
-                          {enemy.role ? "Goalie" : "Forward"}
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <center>
-                    <img
-                      src={`/rank_images/${
-                        // @ts-ignore
-                        RANKS[Math.round(match.averageRank)].imagePath
-                      }`}
-                      width={64}
-                    />
-                    <br />
-                    {
-                      // @ts-ignore
-                      RANKS[Math.round(match.averageRank)].name ?? "N/A"
-                    }
-                    <p style={{ color: "grey" }}>
-                      ({match.rankedPlayersCount} ranks)
-                    </p>
-                  </center>
-                </div>
-              </div>
-            </div>
-            <a href={`/match/${match.matchId}`} className={styles.matchLink}>
-              View Match
-            </a>
-          </div>
-        ))}
-      </div>
-    </div>
+    </>
   );
 }

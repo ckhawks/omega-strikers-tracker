@@ -47,73 +47,79 @@ export default function WinRateCalculator() {
   const roleLabels = ["Forward", "Forward", "Goalie"];
 
   return (
-    <div className={styles.main}>
+    <>
       <NavigationBar />
-      <div className={styles.winRateCalculator}>
-        <h2>Team Win Rate Calculator</h2>
+      <div className={styles.main}>
+        <div className={styles.winRateCalculator}>
+          <h2>Team Win Rate Calculator</h2>
 
-        {/* Team A */}
-        <div className={styles.teamInput}>
-          <h3>Team A</h3>
-          {teamA.map((striker, index) => (
-            <Form.Group
-              key={`teamA-striker-${index}`}
-              className={styles.strikerSelect}
-            >
-              <Form.Label>{roleLabels[index]}</Form.Label>
-              <Form.Select
-                value={striker}
-                onChange={(e) => handleSelectChange("A", index, e.target.value)}
-                aria-label={`Select ${roleLabels[index]} for Team A`}
+          {/* Team A */}
+          <div className={styles.teamInput}>
+            <h3>Team A</h3>
+            {teamA.map((striker, index) => (
+              <Form.Group
+                key={`teamA-striker-${index}`}
+                className={styles.strikerSelect}
               >
-                <option disabled value="">
-                  Select Striker
-                </option>
-                {STRIKERS.map((striker) => (
-                  <option key={striker} value={striker}>
-                    {striker}
+                <Form.Label>{roleLabels[index]}</Form.Label>
+                <Form.Select
+                  value={striker}
+                  onChange={(e) =>
+                    handleSelectChange("A", index, e.target.value)
+                  }
+                  aria-label={`Select ${roleLabels[index]} for Team A`}
+                >
+                  <option disabled value="">
+                    Select Striker
                   </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          ))}
-        </div>
-
-        {/* Team B */}
-        <div className={styles.teamInput}>
-          <h3>Team B</h3>
-          {teamB.map((striker, index) => (
-            <Form.Group
-              key={`teamB-striker-${index}`}
-              className={styles.strikerSelect}
-            >
-              <Form.Label>{roleLabels[index]}</Form.Label>
-              <Form.Select
-                value={striker}
-                onChange={(e) => handleSelectChange("B", index, e.target.value)}
-                aria-label={`Select ${roleLabels[index]} for Team B`}
-              >
-                <option disabled value="">
-                  Select Striker
-                </option>
-                {STRIKERS.map((striker) => (
-                  <option key={striker} value={striker}>
-                    {striker}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          ))}
-        </div>
-
-        <Button onClick={handleSubmit}>Calculate Win Rate</Button>
-
-        {winRate !== null && (
-          <div className={styles.result}>
-            <h3>Estimated Win Rate for Team A: {winRate}%</h3>
+                  {STRIKERS.map((striker) => (
+                    <option key={striker} value={striker}>
+                      {striker}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            ))}
           </div>
-        )}
+
+          {/* Team B */}
+          <div className={styles.teamInput}>
+            <h3>Team B</h3>
+            {teamB.map((striker, index) => (
+              <Form.Group
+                key={`teamB-striker-${index}`}
+                className={styles.strikerSelect}
+              >
+                <Form.Label>{roleLabels[index]}</Form.Label>
+                <Form.Select
+                  value={striker}
+                  onChange={(e) =>
+                    handleSelectChange("B", index, e.target.value)
+                  }
+                  aria-label={`Select ${roleLabels[index]} for Team B`}
+                >
+                  <option disabled value="">
+                    Select Striker
+                  </option>
+                  {STRIKERS.map((striker) => (
+                    <option key={striker} value={striker}>
+                      {striker}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            ))}
+          </div>
+
+          <Button onClick={handleSubmit}>Calculate Win Rate</Button>
+
+          {winRate !== null && (
+            <div className={styles.result}>
+              <h3>Estimated Win Rate for Team A: {winRate}%</h3>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

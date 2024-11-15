@@ -31,29 +31,31 @@ const LoginPage = () => {
   };
 
   return (
-    <div className={styles.main}>
+    <>
       <NavigationBar />
-      <h1>Login</h1>
-      <Form onSubmit={handleSubmit}>
-        <Row style={{ maxWidth: "500px" }}>
-          <Col>
-            <Form.Control
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
-              style={{ maxWidth: "300px" }}
-            />
-          </Col>
-          <Col>
-            <Button variant="primary" type="submit">
-              Login
-            </Button>
-          </Col>
-        </Row>
-        {error && <p>{error}</p>}
-      </Form>
-    </div>
+      <div className={styles.main}>
+        <h1>Login</h1>
+        <Form onSubmit={handleSubmit}>
+          <Row style={{ maxWidth: "500px" }}>
+            <Col>
+              <Form.Control
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                style={{ maxWidth: "300px" }}
+              />
+            </Col>
+            <Col>
+              <Button variant="primary" type="submit">
+                Login
+              </Button>
+            </Col>
+          </Row>
+          {error && <p>{error}</p>}
+        </Form>
+      </div>
+    </>
   );
 };
 

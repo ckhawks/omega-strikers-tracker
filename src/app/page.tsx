@@ -177,141 +177,147 @@ FROM win_loss_stats;`,
   );
 
   return (
-    <div className={styles.main}>
+    <>
       <NavigationBar />
-      <h1>Match List</h1>
-      <div className={styles.matchRankSummary}>
-        <h3>Data Availability</h3>
-        <div className={styles.dataAvailability}>
-          <div className={styles.availabilityItem}>
-            <span className={styles.noDataBox}></span>
-            <span>No Data: {Number(no_data_percent).toFixed(2)}%</span>
+      <div className={styles.main}>
+        <h1>Match List</h1>
+        <div className={styles.matchRankSummary}>
+          <h3>Rank Data Availability</h3>
+          <div className={styles.dataAvailability}>
+            <div className={styles.availabilityItem}>
+              <span className={styles.noDataBox}></span>
+              <span>No Data: {Number(no_data_percent).toFixed(2)}%</span>
+            </div>
+            <div className={styles.availabilityItem}>
+              <span className={styles.partialDataBox}></span>
+              <span>
+                Partial Data: {Number(partial_data_percent).toFixed(2)}%
+              </span>
+            </div>
+            <div className={styles.availabilityItem}>
+              <span className={styles.completeDataBox}></span>
+              <span>
+                Complete Data: {Number(complete_data_percent).toFixed(2)}%
+              </span>
+            </div>
           </div>
-          <div className={styles.availabilityItem}>
-            <span className={styles.partialDataBox}></span>
-            <span>
-              Partial Data: {Number(partial_data_percent).toFixed(2)}%
-            </span>
-          </div>
-          <div className={styles.availabilityItem}>
-            <span className={styles.completeDataBox}></span>
-            <span>
-              Complete Data: {Number(complete_data_percent).toFixed(2)}%
-            </span>
+          <br />
+          <h3>Match Balance for Ranked Matches</h3>
+          <div className={styles.matchBalance}>
+            {RANK_BALANCE_RANGES.map((range, index) => {
+              const percentage = (() => {
+                switch (range.label) {
+                  case "Perfectly Balanced":
+                    return Number(perfectly_balanced_percent).toFixed(2);
+                  case "Slightly Uneven":
+                    return Number(slightly_uneven_percent).toFixed(2);
+                  case "Moderately Uneven":
+                    return Number(moderately_uneven_percent).toFixed(2);
+                  case "Very Uneven":
+                    return Number(highly_uneven_percent).toFixed(2);
+                  default:
+                    return "0.00";
+                }
+              })();
+
+              const className = (() => {
+                switch (range.label) {
+                  case "Perfectly Balanced":
+                    return styles.perfectBalanceBox;
+                  case "Slightly Uneven":
+                    return styles.slightlyUnevenBox;
+                  case "Moderately Uneven":
+                    return styles.moderatelyUnevenBox;
+                  case "Very Uneven":
+                    return styles.highlyUnevenBox;
+                  default:
+                    return "";
+                }
+              })();
+
+              return (
+                <div className={styles.balanceItem} key={index}>
+                  <span className={className}></span>
+                  <span>
+                    {range.label}: {percentage}% (team ranks differ by{" "}
+                    {range.min} -{" "}
+                    {range.max === Infinity ? "more than 3" : range.max})
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        <h3>Match Balance for Ranked Matches</h3>
-        <div className={styles.matchBalance}>
-          {RANK_BALANCE_RANGES.map((range, index) => {
-            const percentage = (() => {
-              switch (range.label) {
-                case "Perfectly Balanced":
-                  return Number(perfectly_balanced_percent).toFixed(2);
-                case "Slightly Uneven":
-                  return Number(slightly_uneven_percent).toFixed(2);
-                case "Moderately Uneven":
-                  return Number(moderately_uneven_percent).toFixed(2);
-                case "Very Uneven":
-                  return Number(highly_uneven_percent).toFixed(2);
-                default:
-                  return "0.00";
-              }
-            })();
+        <div>
+          <h2>Team 1 Performance by Favorability</h2>
+          <p>Based on rank</p>
 
-            const className = (() => {
-              switch (range.label) {
-                case "Perfectly Balanced":
-                  return styles.perfectBalanceBox;
-                case "Slightly Uneven":
-                  return styles.slightlyUnevenBox;
-                case "Moderately Uneven":
-                  return styles.moderatelyUnevenBox;
-                case "Very Uneven":
-                  return styles.highlyUnevenBox;
-                default:
-                  return "";
-              }
-            })();
-
-            return (
-              <div className={styles.balanceItem} key={index}>
-                <span className={className}></span>
-                <span>
-                  {range.label}: {percentage}% (team ranks differ by {range.min}{" "}
-                  - {range.max === Infinity ? "more than 3" : range.max})
-                </span>
+          <div className={styles.performanceStats}>
+            {winLossData.map((data, index) => (
+              <div key={index} className={styles.performanceCard}>
+                <h3>
+                  {data.team1_status === "favored"
+                    ? "Favored Matches"
+                    : "Underdog Matches"}
+                </h3>
+                <p>
+                  <strong>Total Matches:</strong> {data.total_matches}
+                </p>
+                <p>
+                  <strong>Win Percentage:</strong>{" "}
+                  {Number(data.team1_win_percent)?.toFixed(2)}%
+                </p>
+                <p>
+                  <strong>Loss Percentage:</strong>{" "}
+                  {Number(data.team1_loss_percent)?.toFixed(2)}%
+                </p>
               </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <h2>Team 1 Performance by Favorability</h2>
-      <div className={styles.performanceStats}>
-        {winLossData.map((data, index) => (
-          <div key={index} className={styles.performanceCard}>
-            <h3>
-              {data.team1_status === "favored"
-                ? "Favored Matches"
-                : "Underdog Matches"}
-            </h3>
-            <p>
-              <strong>Total Matches:</strong> {data.total_matches}
-            </p>
-            <p>
-              <strong>Win Percentage:</strong>{" "}
-              {Number(data.team1_win_percent)?.toFixed(2)}%
-            </p>
-            <p>
-              <strong>Loss Percentage:</strong>{" "}
-              {Number(data.team1_loss_percent)?.toFixed(2)}%
-            </p>
+            ))}
           </div>
-        ))}
-      </div>
-      <div>
-        {matches &&
-          matches.map((match, index) => {
-            return (
-              <div key={match.id} className={styles["match-item"]}>
-                <span>Match {matches.length - index}</span>
-                <b>{match.map}</b>
-                <span>
-                  {match.team1Score} - {match.team2Score}
-                </span>
-                <span>
-                  {match.duration !== 0
-                    ? `${Math.floor(match.duration / 60).toLocaleString(
-                        "en-US",
-                        { minimumIntegerDigits: 2, useGrouping: false }
-                      )}:${(match.duration % 60).toLocaleString("en-US", {
-                        minimumIntegerDigits: 2,
-                        useGrouping: false,
-                      })}`
-                    : "Unknown"}
-                </span>
-                {match.createdAt.toString()}
-                <span>
-                  {match.avg_match_rank ? (
-                    <img
-                      src={`/rank_images/${
-                        // @ts-ignore
-                        RANKS[Math.round(match.avg_match_rank)].imagePath
-                      }`}
-                      width={32}
-                      style={{ marginRight: "8px" }}
-                    />
-                  ) : (
-                    ""
-                  )}
-                  {
-                    // @ts-ignore
-                    RANKS[Math.round(match.avg_match_rank)].name ?? "N/A"
-                  }
-                </span>
-                <span>{match.balance_level}</span>
-                {/* <p>
+        </div>
+        <div>
+          {matches &&
+            matches.map((match, index) => {
+              return (
+                <div key={match.id} className={styles["match-item"]}>
+                  <span>Match {matches.length - index}</span>
+                  <b>{match.map}</b>
+                  <span>
+                    {match.team1Score} - {match.team2Score}
+                  </span>
+                  <span>
+                    {match.duration !== 0
+                      ? `${Math.floor(match.duration / 60).toLocaleString(
+                          "en-US",
+                          { minimumIntegerDigits: 2, useGrouping: false }
+                        )}:${(match.duration % 60).toLocaleString("en-US", {
+                          minimumIntegerDigits: 2,
+                          useGrouping: false,
+                        })}`
+                      : "Unknown"}
+                  </span>
+                  {match.createdAt.toString()}
+                  <span>
+                    {match.avg_match_rank ? (
+                      <img
+                        src={`/rank_images/${
+                          // @ts-ignore
+                          RANKS[Math.round(match.avg_match_rank)].imagePath
+                        }`}
+                        width={32}
+                        style={{ marginRight: "8px" }}
+                      />
+                    ) : (
+                      ""
+                    )}
+                    {
+                      // @ts-ignore
+                      RANKS[Math.round(match.avg_match_rank)].name ?? "N/A"
+                    }
+                  </span>
+                  <span>{match.balance_level}</span>
+                  {/* <p>
                   <strong>Average Rank:</strong>{" "}
                   {match.avg_match_rank
                     ? Number(match.avg_match_rank).toFixed(2)
@@ -324,11 +330,12 @@ FROM win_loss_stats;`,
                 <p>
                   <strong>Balance Level:</strong> {match.balance_level}
                 </p> */}
-                <Link href={"/match/" + match.id}>View</Link>
-              </div>
-            );
-          })}
+                  <Link href={"/match/" + match.id}>View</Link>
+                </div>
+              );
+            })}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

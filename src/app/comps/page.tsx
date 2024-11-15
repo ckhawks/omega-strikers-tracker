@@ -210,25 +210,26 @@ ORDER BY "winRate" DESC, "matchesPlayed" DESC;
   const allMapsDuos = duos.filter((duo: any) => duo.map === "All Maps");
 
   return (
-    <div className={styles.main}>
+    <>
       <NavigationBar />
-      <div>
-        <h1>Team Compositions</h1>
-      </div>
-      <div>
-        <h2>Trio Compositions</h2>
-      </div>
-      <TrioCompsAccordion
-        allMapsTrios={allMapsTrios}
-        triosByMap={triosByMap}
-        excludeNonRegistered={excludeNonRegistered}
-      />
+      <div className={styles.main}>
+        <div>
+          <h1>Team Compositions</h1>
+        </div>
+        <div>
+          <h2>Trio Compositions</h2>
+        </div>
+        <TrioCompsAccordion
+          allMapsTrios={allMapsTrios}
+          triosByMap={triosByMap}
+          excludeNonRegistered={excludeNonRegistered}
+        />
 
-      <h2>Top Duo Win Rates</h2>
-      <DuoWinRatesAccordion duosByMap={duosByMap} allMapsDuos={allMapsDuos} />
+        <h2>Top Duo Win Rates</h2>
+        <DuoWinRatesAccordion duosByMap={duosByMap} allMapsDuos={allMapsDuos} />
 
-      <SoloCounterStats soloCounters={soloCounters} />
-      {/* <div>
+        <SoloCounterStats soloCounters={soloCounters} />
+        {/* <div>
         <h2>Solo Counter Win Rates</h2>
         <table>
           <thead>
@@ -257,6 +258,7 @@ ORDER BY "winRate" DESC, "matchesPlayed" DESC;
           </tbody>
         </table>
       </div> */}
-    </div>
+      </div>
+    </>
   );
 }

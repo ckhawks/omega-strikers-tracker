@@ -587,945 +587,1009 @@ ORDER BY "matchesPlayed" DESC;
   );
 
   return (
-    <div className={styles.main}>
+    <>
       <NavigationBar />
-      <h1>Players</h1>
-      <div className={styles["player-list"]}>
-        {players &&
-          players.map((player, index) => {
-            return (
-              <Link
-                key={player.id}
-                className={`${styles.card} ${styles["player-row"]}`}
-                href={"/player/" + player.id}
-              >
-                <div className={styles["player-row-section"]}>
-                  <img
-                    width={32}
-                    src={
-                      "/avatars/" +
-                      // @ts-ignore
-                      AVATAR_IMAGES[player.name]
-                    }
-                    style={{
-                      borderRadius: "100%",
-                    }}
-                  />
-                  <h5 style={{ marginBottom: "0" }}>{player.name}</h5>
-                </div>
-                <div className={styles["player-row-section"]}>
-                  <span>{player.matchCount} matches</span>
-                  <div className={styles["player-row-strikers"]}>
-                    {/* <Link href={"/player/" + player.id}>View</Link> */}
-                    {player.topStrikers &&
-                      player.topStrikers.map((striker: any) => {
-                        if (striker != null) {
-                          return (
-                            <StrikerAvatar
-                              striker={striker}
-                              key={striker}
-                              rightMargin={false}
-                            />
-                          );
-                        }
-                      })}
+      <div className={styles.main}>
+        <h1>Players</h1>
+        <div className={styles["player-list"]}>
+          {players &&
+            players.map((player, index) => {
+              return (
+                <Link
+                  key={player.id}
+                  className={`${styles.card} ${styles["player-row"]}`}
+                  href={"/player/" + player.id}
+                >
+                  <div className={styles["player-row-section"]}>
+                    <img
+                      width={32}
+                      src={
+                        "/avatars/" +
+                        // @ts-ignore
+                        AVATAR_IMAGES[player.name]
+                      }
+                      style={{
+                        borderRadius: "100%",
+                      }}
+                    />
+                    <h5 style={{ marginBottom: "0" }}>{player.name}</h5>
                   </div>
-                </div>
-              </Link>
-            );
-          })}
-      </div>
-      <div>
-        <h3>Forward & Goalie</h3>
-        <div>Includes average per match and average per minute</div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th>Strikers</th>
-            <th>Playtime</th>
-            <th>Matches</th>
-            <th>Length</th>
-            <th>Win Rate (%)</th>
-            <th colSpan={2}>
-              <center>Goals</center>
-            </th>
-            <th colSpan={2}>
-              <center>Assists</center>
-            </th>
-            <th colSpan={2}>
-              <center>Saves</center>
-            </th>
-            <th colSpan={2}>
-              <center>KOs</center>
-            </th>
-            <th colSpan={2}>
-              <center>Damage</center>
-            </th>
-            <th colSpan={2}>
-              <center>Shots</center>
-            </th>
-            <th colSpan={2}>
-              <center>Redirects</center>
-            </th>
-            <th colSpan={2}>
-              <center>Orbs</center>
-            </th>
-          </tr>
-          <tr>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th></th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-          </tr>
-        </thead>
-        <tbody>
-          {combinedStats.map((player, index) => (
-            <tr key={index}>
-              <td>{player.name}</td>
-              <td>
-                <div style={{ display: "flex", gap: "4px" }}>
-                  {player.topStrikers?.map((striker: any, i: number) => (
-                    <StrikerAvatar
-                      striker={striker}
-                      rightMargin={false}
-                      key={striker}
-                    />
-                  ))}
-                </div>
-              </td>
-              <td>{formatDuration(player.totalPlaytimeInSeconds)}</td>
-              <td>{player.matchesPlayed}</td>
-              <td>
-                {formatDuration(
-                  Number(
-                    (
-                      player.totalPlaytimeInSeconds / player.matchesPlayed
-                    ).toFixed(0)
-                  )
-                )}
-              </td>
-              <td className={player.isHighestWinRate ? styles.highlight : ""}>
-                {Number(player.winRate).toFixed(2)}%
-              </td>
-              <td
-                className={
-                  player.isHighestGoalsPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgGoalsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestGoalsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.goalsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestAssistsPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgAssistsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestAssistsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.assistsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestSavesPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgSavesPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestSavesPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.savesPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={player.isHighestKOsPerMatch ? styles.highlight : ""}
-              >
-                {Number(player.avgKOsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={player.isHighestKOsPerMinute ? styles.highlight : ""}
-              >
-                {Number(player.knockoutsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestDamagePerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgDamagePerMatch).toFixed(0)}
-              </td>
-              <td
-                className={
-                  player.isHighestDamagePerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.damagePerMinute).toFixed(0)}
-              </td>
-              <td
-                className={
-                  player.isHighestShotsPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgShotsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestShotsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.shotsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestRedirectsPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgRedirectsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestRedirectsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.redirectsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={player.isHighestOrbsPerMatch ? styles.highlight : ""}
-              >
-                {Number(player.avgOrbsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestOrbsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.orbsPerMinute).toFixed(2)}
-              </td>
-            </tr>
-          ))}
-          {anonymousCombinedStats && (
+                  <div className={styles["player-row-section"]}>
+                    <span>{player.matchCount} matches</span>
+                    <div className={styles["player-row-strikers"]}>
+                      {/* <Link href={"/player/" + player.id}>View</Link> */}
+                      {player.topStrikers &&
+                        player.topStrikers.map((striker: any) => {
+                          if (striker != null) {
+                            return (
+                              <StrikerAvatar
+                                striker={striker}
+                                key={striker}
+                                rightMargin={false}
+                              />
+                            );
+                          }
+                        })}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+        </div>
+        <div>
+          <h3>Forward & Goalie</h3>
+          <div>Includes average per match and average per minute</div>
+        </div>
+        <table>
+          <thead>
             <tr>
-              <td>{anonymousCombinedStats.name}</td>
-              <td>
-                <div style={{ display: "flex", gap: "4px" }}>
-                  {anonymousCombinedStats.topStrikers?.map(
-                    (striker: any, i: number) => (
-                      <StrikerAvatar
-                        striker={striker}
-                        rightMargin={false}
-                        key={striker}
-                      />
-                    )
-                  )}
-                </div>
-              </td>
-              <td>
-                {formatDuration(anonymousCombinedStats.totalPlaytimeInSeconds)}
-              </td>
-              <td>{anonymousCombinedStats.matchesPlayed}</td>
-              <td>
-                {formatDuration(
-                  Number(
-                    (
-                      anonymousCombinedStats.totalPlaytimeInSeconds /
-                      anonymousCombinedStats.matchesPlayed
-                    ).toFixed(0)
-                  )
-                )}
-              </td>
-              <td>{Number(anonymousCombinedStats.winRate).toFixed(2)}%</td>
-              <td>
-                {Number(anonymousCombinedStats.avgGoalsPerMatch).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.goalsPerMinute).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.avgAssistsPerMatch).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.assistsPerMinute).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.avgSavesPerMatch).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.savesPerMinute).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.avgKOsPerMatch).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.knockoutsPerMinute).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.avgDamagePerMatch).toFixed(0)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.damagePerMinute).toFixed(0)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.avgShotsPerMatch).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.shotsPerMinute).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.avgRedirectsPerMatch).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.redirectsPerMinute).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousCombinedStats.avgOrbsPerMatch).toFixed(2)}
-              </td>
-              <td>{Number(anonymousCombinedStats.orbsPerMinute).toFixed(2)}</td>
+              <th>Player</th>
+              <th>Strikers</th>
+              <th>Playtime</th>
+              <th>Matches</th>
+              <th>Length</th>
+              <th>Win Rate (%)</th>
+              <th colSpan={2}>
+                <center>Goals</center>
+              </th>
+              <th colSpan={2}>
+                <center>Assists</center>
+              </th>
+              <th colSpan={2}>
+                <center>Saves</center>
+              </th>
+              <th colSpan={2}>
+                <center>KOs</center>
+              </th>
+              <th colSpan={2}>
+                <center>Damage</center>
+              </th>
+              <th colSpan={2}>
+                <center>Shots</center>
+              </th>
+              <th colSpan={2}>
+                <center>Redirects</center>
+              </th>
+              <th colSpan={2}>
+                <center>Orbs</center>
+              </th>
             </tr>
-          )}
-        </tbody>
-      </table>
-
-      <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        Forward
-        <img src="/icons/skip-forward.svg" width={28} />
-      </h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th>Strikers</th>
-            <th>Playtime</th>
-            <th>Matches</th>
-            <th>Length</th>
-            <th>Win Rate (%)</th>
-            <th colSpan={2}>
-              <center>Goals</center>
-            </th>
-            <th colSpan={2}>
-              <center>Assists</center>
-            </th>
-            <th colSpan={2}>
-              <center>Saves</center>
-            </th>
-            <th colSpan={2}>
-              <center>KOs</center>
-            </th>
-            <th colSpan={2}>
-              <center>Damage</center>
-            </th>
-            <th colSpan={2}>
-              <center>Shots</center>
-            </th>
-            <th colSpan={2}>
-              <center>Redirects</center>
-            </th>
-            <th colSpan={2}>
-              <center>Orbs</center>
-            </th>
-          </tr>
-          <tr>
-            <th colSpan={6}></th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-          </tr>
-        </thead>
-        <tbody>
-          {forwardStats.map((player, index) => (
-            <tr key={index}>
-              <td>{player.name}</td>
-              <td>
-                <div style={{ display: "flex", gap: "4px" }}>
-                  {player.topStrikers?.map((striker: any, i: number) => (
-                    <StrikerAvatar
-                      striker={striker}
-                      rightMargin={false}
-                      key={striker}
-                    />
-                  ))}
-                </div>
-              </td>
-              <td>{formatDuration(player.totalPlaytimeInSeconds)}</td>
-              <td>{player.matchesPlayed}</td>
-              <td>
-                {formatDuration(
-                  Number(
-                    (
-                      player.totalPlaytimeInSeconds / player.matchesPlayed
-                    ).toFixed(0)
-                  )
-                )}
-              </td>
-              <td className={player.isHighestWinRate ? styles.highlight : ""}>
-                {Number(player.winRate).toFixed(2)}%
-              </td>
-              <td
-                className={
-                  player.isHighestGoalsPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgGoalsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestGoalsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.goalsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestAssistsPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgAssistsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestAssistsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.assistsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestSavesPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgSavesPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestSavesPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.savesPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={player.isHighestKOsPerMatch ? styles.highlight : ""}
-              >
-                {Number(player.avgKOsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={player.isHighestKOsPerMinute ? styles.highlight : ""}
-              >
-                {Number(player.knockoutsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestDamagePerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgDamagePerMatch).toFixed(0)}
-              </td>
-              <td
-                className={
-                  player.isHighestDamagePerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.damagePerMinute).toFixed(0)}
-              </td>
-              <td
-                className={
-                  player.isHighestShotsPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgShotsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestShotsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.shotsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestRedirectsPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgRedirectsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestRedirectsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.redirectsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={player.isHighestOrbsPerMatch ? styles.highlight : ""}
-              >
-                {Number(player.avgOrbsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestOrbsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.orbsPerMinute).toFixed(2)}
-              </td>
-            </tr>
-          ))}
-          {anonymousForwardStats && (
             <tr>
-              <td>{anonymousForwardStats.name}</td>
-              <td>
-                <div style={{ display: "flex", gap: "4px" }}>
-                  {anonymousForwardStats.topStrikers?.map(
-                    (striker: any, i: number) => (
-                      <StrikerAvatar
-                        striker={striker}
-                        rightMargin={false}
-                        key={striker}
-                      />
-                    )
-                  )}
-                </div>
-              </td>
-              <td>
-                {formatDuration(anonymousForwardStats.totalPlaytimeInSeconds)}
-              </td>
-              <td>{anonymousForwardStats.matchesPlayed}</td>
-              <td>
-                {formatDuration(
-                  Number(
-                    (
-                      anonymousForwardStats.totalPlaytimeInSeconds /
-                      anonymousForwardStats.matchesPlayed
-                    ).toFixed(0)
-                  )
-                )}
-              </td>
-              <td>{Number(anonymousForwardStats.winRate).toFixed(2)}%</td>
-              <td>
-                {Number(anonymousForwardStats.avgGoalsPerMatch).toFixed(2)}
-              </td>
-              <td>{Number(anonymousForwardStats.goalsPerMinute).toFixed(2)}</td>
-              <td>
-                {Number(anonymousForwardStats.avgAssistsPerMatch).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousForwardStats.assistsPerMinute).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousForwardStats.avgSavesPerMatch).toFixed(2)}
-              </td>
-              <td>{Number(anonymousForwardStats.savesPerMinute).toFixed(2)}</td>
-              <td>{Number(anonymousForwardStats.avgKOsPerMatch).toFixed(2)}</td>
-              <td>
-                {Number(anonymousForwardStats.knockoutsPerMinute).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousForwardStats.avgDamagePerMatch).toFixed(0)}
-              </td>
-              <td>
-                {Number(anonymousForwardStats.damagePerMinute).toFixed(0)}
-              </td>
-              <td>
-                {Number(anonymousForwardStats.avgShotsPerMatch).toFixed(2)}
-              </td>
-              <td>{Number(anonymousForwardStats.shotsPerMinute).toFixed(2)}</td>
-              <td>
-                {Number(anonymousForwardStats.avgRedirectsPerMatch).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousForwardStats.redirectsPerMinute).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousForwardStats.avgOrbsPerMatch).toFixed(2)}
-              </td>
-              <td>{Number(anonymousForwardStats.orbsPerMinute).toFixed(2)}</td>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
             </tr>
-          )}
-        </tbody>
-      </table>
-
-      <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        Goalie
-        <img src="/icons/shield.svg" width={28} />
-      </h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th>Strikers</th>
-            <th>Playtime</th>
-            <th>Matches</th>
-            <th>Length</th>
-            <th>Win Rate (%)</th>
-            <th colSpan={2}>
-              <center>Goals</center>
-            </th>
-            <th colSpan={2}>
-              <center>Assists</center>
-            </th>
-            <th colSpan={2}>
-              <center>Saves</center>
-            </th>
-            <th colSpan={2}>
-              <center>KOs</center>
-            </th>
-            <th colSpan={2}>
-              <center>Damage</center>
-            </th>
-            <th colSpan={2}>
-              <center>Shots</center>
-            </th>
-            <th colSpan={2}>
-              <center>Redirects</center>
-            </th>
-            <th colSpan={2}>
-              <center>Orbs</center>
-            </th>
-          </tr>
-          <tr>
-            <th colSpan={6}></th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-            <th>Avg</th>
-            <th>pM</th>
-          </tr>
-        </thead>
-        <tbody>
-          {goalieStats.map((player, index) => (
-            <tr key={index}>
-              <td>{player.name}</td>
-              <td>
-                <div style={{ display: "flex", gap: "4px" }}>
-                  {player.topStrikers?.map((striker: any, i: number) => (
-                    <StrikerAvatar
-                      striker={striker}
-                      rightMargin={false}
-                      key={striker}
-                    />
-                  ))}
-                </div>
-              </td>
-              <td>{formatDuration(player.totalPlaytimeInSeconds)}</td>
-              <td>{player.matchesPlayed}</td>
-              <td>
-                {formatDuration(
-                  Number(
-                    (
-                      player.totalPlaytimeInSeconds / player.matchesPlayed
-                    ).toFixed(0)
-                  )
-                )}
-              </td>
-              <td className={player.isHighestWinRate ? styles.highlight : ""}>
-                {Number(player.winRate).toFixed(2)}%
-              </td>
-              <td
-                className={
-                  player.isHighestGoalsPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgGoalsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestGoalsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.goalsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestAssistsPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgAssistsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestAssistsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.assistsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestSavesPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgSavesPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestSavesPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.savesPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={player.isHighestKOsPerMatch ? styles.highlight : ""}
-              >
-                {Number(player.avgKOsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={player.isHighestKOsPerMinute ? styles.highlight : ""}
-              >
-                {Number(player.knockoutsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestDamagePerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgDamagePerMatch).toFixed(0)}
-              </td>
-              <td
-                className={
-                  player.isHighestDamagePerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.damagePerMinute).toFixed(0)}
-              </td>
-              <td
-                className={
-                  player.isHighestShotsPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgShotsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestShotsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.shotsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestRedirectsPerMatch ? styles.highlight : ""
-                }
-              >
-                {Number(player.avgRedirectsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestRedirectsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.redirectsPerMinute).toFixed(2)}
-              </td>
-              <td
-                className={player.isHighestOrbsPerMatch ? styles.highlight : ""}
-              >
-                {Number(player.avgOrbsPerMatch).toFixed(2)}
-              </td>
-              <td
-                className={
-                  player.isHighestOrbsPerMinute ? styles.highlight : ""
-                }
-              >
-                {Number(player.orbsPerMinute).toFixed(2)}
-              </td>
-            </tr>
-          ))}
-
-          {anonymousGoalieStats && (
-            <tr>
-              <td>{anonymousGoalieStats.name}</td>
-              <td>
-                <div style={{ display: "flex", gap: "4px" }}>
-                  {anonymousGoalieStats.topStrikers?.map(
-                    (striker: any, i: number) => (
-                      <StrikerAvatar
-                        striker={striker}
-                        rightMargin={false}
-                        key={striker}
-                      />
-                    )
-                  )}
-                </div>
-              </td>
-              <td>
-                {formatDuration(anonymousGoalieStats.totalPlaytimeInSeconds)}
-              </td>
-              <td>{anonymousGoalieStats.matchesPlayed}</td>
-              <td>
-                {formatDuration(
-                  Number(
-                    (
-                      anonymousGoalieStats.totalPlaytimeInSeconds /
-                      anonymousGoalieStats.matchesPlayed
-                    ).toFixed(0)
-                  )
-                )}
-              </td>
-              <td>{Number(anonymousGoalieStats.winRate).toFixed(2)}%</td>
-              <td>
-                {Number(anonymousGoalieStats.avgGoalsPerMatch).toFixed(2)}
-              </td>
-              <td>{Number(anonymousGoalieStats.goalsPerMinute).toFixed(2)}</td>
-              <td>
-                {Number(anonymousGoalieStats.avgAssistsPerMatch).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousGoalieStats.assistsPerMinute).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousGoalieStats.avgSavesPerMatch).toFixed(2)}
-              </td>
-              <td>{Number(anonymousGoalieStats.savesPerMinute).toFixed(2)}</td>
-              <td>{Number(anonymousGoalieStats.avgKOsPerMatch).toFixed(2)}</td>
-              <td>
-                {Number(anonymousGoalieStats.knockoutsPerMinute).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousGoalieStats.avgDamagePerMatch).toFixed(0)}
-              </td>
-              <td>{Number(anonymousGoalieStats.damagePerMinute).toFixed(0)}</td>
-              <td>
-                {Number(anonymousGoalieStats.avgShotsPerMatch).toFixed(2)}
-              </td>
-              <td>{Number(anonymousGoalieStats.shotsPerMinute).toFixed(2)}</td>
-              <td>
-                {Number(anonymousGoalieStats.avgRedirectsPerMatch).toFixed(2)}
-              </td>
-              <td>
-                {Number(anonymousGoalieStats.redirectsPerMinute).toFixed(2)}
-              </td>
-              <td>{Number(anonymousGoalieStats.avgOrbsPerMatch).toFixed(2)}</td>
-              <td>{Number(anonymousGoalieStats.orbsPerMinute).toFixed(2)}</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-
-      <h3>All-Time Totals</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th>Playtime</th>
-            <th>Total Matches</th>
-            <th>Total Wins</th>
-            <th>Total Losses</th>
-            <th>Win Rate (%)</th>
-            <th>Total Goals</th>
-            <th>Total Assists</th>
-            <th>Total Saves</th>
-            <th>Total KOs</th>
-            <th>Total Damage</th>
-            <th>Total Shots</th>
-            <th>Total Redirects</th>
-            <th>Total Orbs</th>
-          </tr>
-        </thead>
-        <tbody>
-          {allTimeStats &&
-            allTimeStats.map((player, index) => (
+          </thead>
+          <tbody>
+            {combinedStats.map((player, index) => (
               <tr key={index}>
                 <td>{player.name}</td>
-                <td
-                  className={player.isHighestPlaytime ? styles.highlight : ""}
-                >
-                  {formatDuration(player.totalPlaytime)}
+                <td>
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    {player.topStrikers?.map((striker: any, i: number) => (
+                      <StrikerAvatar
+                        striker={striker}
+                        rightMargin={false}
+                        key={striker}
+                      />
+                    ))}
+                  </div>
                 </td>
-                <td className={player.isHighestMatches ? styles.highlight : ""}>
-                  {player.totalMatches}
-                </td>
-                <td className={player.isHighestWins ? styles.highlight : ""}>
-                  {player.totalWins}
-                </td>
-                <td className={player.isHighestLosses ? styles.highlight : ""}>
-                  {player.totalLosses}
+                <td>{formatDuration(player.totalPlaytimeInSeconds)}</td>
+                <td>{player.matchesPlayed}</td>
+                <td>
+                  {formatDuration(
+                    Number(
+                      (
+                        player.totalPlaytimeInSeconds / player.matchesPlayed
+                      ).toFixed(0)
+                    )
+                  )}
                 </td>
                 <td className={player.isHighestWinRate ? styles.highlight : ""}>
-                  {player.winRate}%
-                </td>
-                <td className={player.isHighestGoals ? styles.highlight : ""}>
-                  {player.totalGoals}
-                </td>
-                <td className={player.isHighestAssists ? styles.highlight : ""}>
-                  {player.totalAssists}
-                </td>
-                <td className={player.isHighestSaves ? styles.highlight : ""}>
-                  {player.totalSaves}
+                  {Number(player.winRate).toFixed(2)}%
                 </td>
                 <td
-                  className={player.isHighestKnockouts ? styles.highlight : ""}
+                  className={
+                    player.isHighestGoalsPerMatch ? styles.highlight : ""
+                  }
                 >
-                  {player.totalKnockouts}
-                </td>
-                <td className={player.isHighestDamage ? styles.highlight : ""}>
-                  {player.totalDamage}
-                </td>
-                <td className={player.isHighestShots ? styles.highlight : ""}>
-                  {player.totalShots}
+                  {Number(player.avgGoalsPerMatch).toFixed(2)}
                 </td>
                 <td
-                  className={player.isHighestRedirects ? styles.highlight : ""}
+                  className={
+                    player.isHighestGoalsPerMinute ? styles.highlight : ""
+                  }
                 >
-                  {player.totalRedirects}
+                  {Number(player.goalsPerMinute).toFixed(2)}
                 </td>
-                <td className={player.isHighestOrbs ? styles.highlight : ""}>
-                  {player.totalOrbs}
+                <td
+                  className={
+                    player.isHighestAssistsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgAssistsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestAssistsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.assistsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestSavesPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgSavesPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestSavesPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.savesPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestKOsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgKOsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestKOsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.knockoutsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestDamagePerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgDamagePerMatch).toFixed(0)}
+                </td>
+                <td
+                  className={
+                    player.isHighestDamagePerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.damagePerMinute).toFixed(0)}
+                </td>
+                <td
+                  className={
+                    player.isHighestShotsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgShotsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestShotsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.shotsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestRedirectsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgRedirectsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestRedirectsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.redirectsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestOrbsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgOrbsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestOrbsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.orbsPerMinute).toFixed(2)}
                 </td>
               </tr>
             ))}
-        </tbody>
-      </table>
-    </div>
+            {anonymousCombinedStats && (
+              <tr>
+                <td>{anonymousCombinedStats.name}</td>
+                <td>
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    {anonymousCombinedStats.topStrikers?.map(
+                      (striker: any, i: number) => (
+                        <StrikerAvatar
+                          striker={striker}
+                          rightMargin={false}
+                          key={striker}
+                        />
+                      )
+                    )}
+                  </div>
+                </td>
+                <td>
+                  {formatDuration(
+                    anonymousCombinedStats.totalPlaytimeInSeconds
+                  )}
+                </td>
+                <td>{anonymousCombinedStats.matchesPlayed}</td>
+                <td>
+                  {formatDuration(
+                    Number(
+                      (
+                        anonymousCombinedStats.totalPlaytimeInSeconds /
+                        anonymousCombinedStats.matchesPlayed
+                      ).toFixed(0)
+                    )
+                  )}
+                </td>
+                <td>{Number(anonymousCombinedStats.winRate).toFixed(2)}%</td>
+                <td>
+                  {Number(anonymousCombinedStats.avgGoalsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.goalsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.avgAssistsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.assistsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.avgSavesPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.savesPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.avgKOsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.knockoutsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.avgDamagePerMatch).toFixed(0)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.damagePerMinute).toFixed(0)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.avgShotsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.shotsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.avgRedirectsPerMatch).toFixed(
+                    2
+                  )}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.redirectsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.avgOrbsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousCombinedStats.orbsPerMinute).toFixed(2)}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          Forward
+          <img src="/icons/skip-forward.svg" width={28} />
+        </h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Strikers</th>
+              <th>Playtime</th>
+              <th>Matches</th>
+              <th>Length</th>
+              <th>Win Rate (%)</th>
+              <th colSpan={2}>
+                <center>Goals</center>
+              </th>
+              <th colSpan={2}>
+                <center>Assists</center>
+              </th>
+              <th colSpan={2}>
+                <center>Saves</center>
+              </th>
+              <th colSpan={2}>
+                <center>KOs</center>
+              </th>
+              <th colSpan={2}>
+                <center>Damage</center>
+              </th>
+              <th colSpan={2}>
+                <center>Shots</center>
+              </th>
+              <th colSpan={2}>
+                <center>Redirects</center>
+              </th>
+              <th colSpan={2}>
+                <center>Orbs</center>
+              </th>
+            </tr>
+            <tr>
+              <th colSpan={6}></th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+            </tr>
+          </thead>
+          <tbody>
+            {forwardStats.map((player, index) => (
+              <tr key={index}>
+                <td>{player.name}</td>
+                <td>
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    {player.topStrikers?.map((striker: any, i: number) => (
+                      <StrikerAvatar
+                        striker={striker}
+                        rightMargin={false}
+                        key={striker}
+                      />
+                    ))}
+                  </div>
+                </td>
+                <td>{formatDuration(player.totalPlaytimeInSeconds)}</td>
+                <td>{player.matchesPlayed}</td>
+                <td>
+                  {formatDuration(
+                    Number(
+                      (
+                        player.totalPlaytimeInSeconds / player.matchesPlayed
+                      ).toFixed(0)
+                    )
+                  )}
+                </td>
+                <td className={player.isHighestWinRate ? styles.highlight : ""}>
+                  {Number(player.winRate).toFixed(2)}%
+                </td>
+                <td
+                  className={
+                    player.isHighestGoalsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgGoalsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestGoalsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.goalsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestAssistsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgAssistsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestAssistsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.assistsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestSavesPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgSavesPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestSavesPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.savesPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestKOsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgKOsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestKOsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.knockoutsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestDamagePerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgDamagePerMatch).toFixed(0)}
+                </td>
+                <td
+                  className={
+                    player.isHighestDamagePerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.damagePerMinute).toFixed(0)}
+                </td>
+                <td
+                  className={
+                    player.isHighestShotsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgShotsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestShotsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.shotsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestRedirectsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgRedirectsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestRedirectsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.redirectsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestOrbsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgOrbsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestOrbsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.orbsPerMinute).toFixed(2)}
+                </td>
+              </tr>
+            ))}
+            {anonymousForwardStats && (
+              <tr>
+                <td>{anonymousForwardStats.name}</td>
+                <td>
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    {anonymousForwardStats.topStrikers?.map(
+                      (striker: any, i: number) => (
+                        <StrikerAvatar
+                          striker={striker}
+                          rightMargin={false}
+                          key={striker}
+                        />
+                      )
+                    )}
+                  </div>
+                </td>
+                <td>
+                  {formatDuration(anonymousForwardStats.totalPlaytimeInSeconds)}
+                </td>
+                <td>{anonymousForwardStats.matchesPlayed}</td>
+                <td>
+                  {formatDuration(
+                    Number(
+                      (
+                        anonymousForwardStats.totalPlaytimeInSeconds /
+                        anonymousForwardStats.matchesPlayed
+                      ).toFixed(0)
+                    )
+                  )}
+                </td>
+                <td>{Number(anonymousForwardStats.winRate).toFixed(2)}%</td>
+                <td>
+                  {Number(anonymousForwardStats.avgGoalsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.goalsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.avgAssistsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.assistsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.avgSavesPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.savesPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.avgKOsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.knockoutsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.avgDamagePerMatch).toFixed(0)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.damagePerMinute).toFixed(0)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.avgShotsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.shotsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.avgRedirectsPerMatch).toFixed(
+                    2
+                  )}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.redirectsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.avgOrbsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousForwardStats.orbsPerMinute).toFixed(2)}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        <h3 style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          Goalie
+          <img src="/icons/shield.svg" width={28} />
+        </h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Strikers</th>
+              <th>Playtime</th>
+              <th>Matches</th>
+              <th>Length</th>
+              <th>Win Rate (%)</th>
+              <th colSpan={2}>
+                <center>Goals</center>
+              </th>
+              <th colSpan={2}>
+                <center>Assists</center>
+              </th>
+              <th colSpan={2}>
+                <center>Saves</center>
+              </th>
+              <th colSpan={2}>
+                <center>KOs</center>
+              </th>
+              <th colSpan={2}>
+                <center>Damage</center>
+              </th>
+              <th colSpan={2}>
+                <center>Shots</center>
+              </th>
+              <th colSpan={2}>
+                <center>Redirects</center>
+              </th>
+              <th colSpan={2}>
+                <center>Orbs</center>
+              </th>
+            </tr>
+            <tr>
+              <th colSpan={6}></th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+              <th>Avg</th>
+              <th>pM</th>
+            </tr>
+          </thead>
+          <tbody>
+            {goalieStats.map((player, index) => (
+              <tr key={index}>
+                <td>{player.name}</td>
+                <td>
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    {player.topStrikers?.map((striker: any, i: number) => (
+                      <StrikerAvatar
+                        striker={striker}
+                        rightMargin={false}
+                        key={striker}
+                      />
+                    ))}
+                  </div>
+                </td>
+                <td>{formatDuration(player.totalPlaytimeInSeconds)}</td>
+                <td>{player.matchesPlayed}</td>
+                <td>
+                  {formatDuration(
+                    Number(
+                      (
+                        player.totalPlaytimeInSeconds / player.matchesPlayed
+                      ).toFixed(0)
+                    )
+                  )}
+                </td>
+                <td className={player.isHighestWinRate ? styles.highlight : ""}>
+                  {Number(player.winRate).toFixed(2)}%
+                </td>
+                <td
+                  className={
+                    player.isHighestGoalsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgGoalsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestGoalsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.goalsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestAssistsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgAssistsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestAssistsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.assistsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestSavesPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgSavesPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestSavesPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.savesPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestKOsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgKOsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestKOsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.knockoutsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestDamagePerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgDamagePerMatch).toFixed(0)}
+                </td>
+                <td
+                  className={
+                    player.isHighestDamagePerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.damagePerMinute).toFixed(0)}
+                </td>
+                <td
+                  className={
+                    player.isHighestShotsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgShotsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestShotsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.shotsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestRedirectsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgRedirectsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestRedirectsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.redirectsPerMinute).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestOrbsPerMatch ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.avgOrbsPerMatch).toFixed(2)}
+                </td>
+                <td
+                  className={
+                    player.isHighestOrbsPerMinute ? styles.highlight : ""
+                  }
+                >
+                  {Number(player.orbsPerMinute).toFixed(2)}
+                </td>
+              </tr>
+            ))}
+
+            {anonymousGoalieStats && (
+              <tr>
+                <td>{anonymousGoalieStats.name}</td>
+                <td>
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    {anonymousGoalieStats.topStrikers?.map(
+                      (striker: any, i: number) => (
+                        <StrikerAvatar
+                          striker={striker}
+                          rightMargin={false}
+                          key={striker}
+                        />
+                      )
+                    )}
+                  </div>
+                </td>
+                <td>
+                  {formatDuration(anonymousGoalieStats.totalPlaytimeInSeconds)}
+                </td>
+                <td>{anonymousGoalieStats.matchesPlayed}</td>
+                <td>
+                  {formatDuration(
+                    Number(
+                      (
+                        anonymousGoalieStats.totalPlaytimeInSeconds /
+                        anonymousGoalieStats.matchesPlayed
+                      ).toFixed(0)
+                    )
+                  )}
+                </td>
+                <td>{Number(anonymousGoalieStats.winRate).toFixed(2)}%</td>
+                <td>
+                  {Number(anonymousGoalieStats.avgGoalsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.goalsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.avgAssistsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.assistsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.avgSavesPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.savesPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.avgKOsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.knockoutsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.avgDamagePerMatch).toFixed(0)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.damagePerMinute).toFixed(0)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.avgShotsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.shotsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.avgRedirectsPerMatch).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.redirectsPerMinute).toFixed(2)}
+                </td>
+                <td>
+                  {Number(anonymousGoalieStats.avgOrbsPerMatch).toFixed(2)}
+                </td>
+                <td>{Number(anonymousGoalieStats.orbsPerMinute).toFixed(2)}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        <h3>All-Time Totals</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Playtime</th>
+              <th>Total Matches</th>
+              <th>Total Wins</th>
+              <th>Total Losses</th>
+              <th>Win Rate (%)</th>
+              <th>Total Goals</th>
+              <th>Total Assists</th>
+              <th>Total Saves</th>
+              <th>Total KOs</th>
+              <th>Total Damage</th>
+              <th>Total Shots</th>
+              <th>Total Redirects</th>
+              <th>Total Orbs</th>
+            </tr>
+          </thead>
+          <tbody>
+            {allTimeStats &&
+              allTimeStats.map((player, index) => (
+                <tr key={index}>
+                  <td>{player.name}</td>
+                  <td
+                    className={player.isHighestPlaytime ? styles.highlight : ""}
+                  >
+                    {formatDuration(player.totalPlaytime)}
+                  </td>
+                  <td
+                    className={player.isHighestMatches ? styles.highlight : ""}
+                  >
+                    {player.totalMatches}
+                  </td>
+                  <td className={player.isHighestWins ? styles.highlight : ""}>
+                    {player.totalWins}
+                  </td>
+                  <td
+                    className={player.isHighestLosses ? styles.highlight : ""}
+                  >
+                    {player.totalLosses}
+                  </td>
+                  <td
+                    className={player.isHighestWinRate ? styles.highlight : ""}
+                  >
+                    {player.winRate}%
+                  </td>
+                  <td className={player.isHighestGoals ? styles.highlight : ""}>
+                    {player.totalGoals}
+                  </td>
+                  <td
+                    className={player.isHighestAssists ? styles.highlight : ""}
+                  >
+                    {player.totalAssists}
+                  </td>
+                  <td className={player.isHighestSaves ? styles.highlight : ""}>
+                    {player.totalSaves}
+                  </td>
+                  <td
+                    className={
+                      player.isHighestKnockouts ? styles.highlight : ""
+                    }
+                  >
+                    {player.totalKnockouts}
+                  </td>
+                  <td
+                    className={player.isHighestDamage ? styles.highlight : ""}
+                  >
+                    {player.totalDamage}
+                  </td>
+                  <td className={player.isHighestShots ? styles.highlight : ""}>
+                    {player.totalShots}
+                  </td>
+                  <td
+                    className={
+                      player.isHighestRedirects ? styles.highlight : ""
+                    }
+                  >
+                    {player.totalRedirects}
+                  </td>
+                  <td className={player.isHighestOrbs ? styles.highlight : ""}>
+                    {player.totalOrbs}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
