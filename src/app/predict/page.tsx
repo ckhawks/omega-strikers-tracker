@@ -5,6 +5,7 @@ import { Form, Button } from "react-bootstrap";
 import styles from "../main.module.scss";
 import NavigationBar from "@/components/NavigationBar";
 import { STRIKERS } from "@/constants/strikers"; // Import your strikers array here
+import SetTitle from "@/components/SetTitle";
 
 export default function WinRateCalculator() {
   const [teamA, setTeamA] = useState(["", "", ""]);
@@ -49,6 +50,7 @@ export default function WinRateCalculator() {
   return (
     <>
       <NavigationBar />
+      <SetTitle title={"Win Rate Calculator - OS Tracker"} />
       <div className={styles.main}>
         <div className={styles.winRateCalculator}>
           <h2>Team Win Rate Calculator</h2>

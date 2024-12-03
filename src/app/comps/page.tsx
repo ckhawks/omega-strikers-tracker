@@ -8,6 +8,10 @@ import SoloCounterStats from "./SoloCounterStats";
 
 export const revalidate = 1;
 
+export const metadata = {
+  title: "Comps & Counters - OS Tracker",
+};
+
 // Helper function to group duos by map
 const groupByMap = (duos: any) => {
   return duos.reduce((acc: any, duo: any) => {

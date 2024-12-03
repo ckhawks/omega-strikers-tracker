@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const counterStrikers = await db(
       `
       WITH individual_win_rates AS (
-        -- Calculate win rates of each opposing striker against each specified striker individually, with optional role filtering
+        -- Calculate win rates and matches played by each opposing striker against each specified striker individually, with optional role filtering
         SELECT 
             mp3."striker" AS "opponentStriker",
             mp3."wasGoalie" AS "opponentRole",
@@ -55,19 +55,26 @@ export async function GET(request: NextRequest) {
     ),
     
     aggregated_win_rates AS (
-        -- Calculate average win rate against both strikers and separate win rates against each
+        -- Calculate average win rate against both strikers and separate win rates and matches against each specified striker
         SELECT 
             "opponentStriker",
             "opponentRole",
-            AVG(ROUND(("wins"::numeric / NULLIF("matchesPlayed", 0)) * 100, 2)) AS "averageWinRate",
-            SUM("matchesPlayed") AS "totalMatches",
             
-            -- Calculate separate win rates against each specified striker
+            -- Average win rate against both specified strikers
+            AVG(ROUND(("wins"::numeric / NULLIF("matchesPlayed", 0)) * 100, 2)) AS "averageWinRate",
+            
+            -- Total matches played against each specified striker
+            SUM("matchesPlayed") AS "totalMatches",
+            NULLIF(SUM(CASE WHEN "targetStriker" = $1 THEN "matchesPlayed" ELSE 0 END), 0) AS "matchesAgainstStrikerA",
+            NULLIF(SUM(CASE WHEN "targetStriker" = $2 THEN "matchesPlayed" ELSE 0 END), 0) AS "matchesAgainstStrikerB",
+            
+            -- Separate win rates against each specified striker
             MAX(CASE WHEN "targetStriker" = $1 THEN ROUND(("wins"::numeric / NULLIF("matchesPlayed", 0)) * 100, 2) END) AS "winRateAgainstStrikerA",
             MAX(CASE WHEN "targetStriker" = $2 THEN ROUND(("wins"::numeric / NULLIF("matchesPlayed", 0)) * 100, 2) END) AS "winRateAgainstStrikerB"
             
         FROM individual_win_rates
         WHERE "targetStriker" IN ($1, $2)
+          AND "opponentStriker" NOT IN ($1, $2)  -- Exclude striker A and striker B from the results
         GROUP BY "opponentStriker", "opponentRole"
     )
     
@@ -76,10 +83,14 @@ export async function GET(request: NextRequest) {
         "opponentRole",
         "averageWinRate",
         "totalMatches",
+        "matchesAgainstStrikerA",
+        "matchesAgainstStrikerB",
         "winRateAgainstStrikerA",
         "winRateAgainstStrikerB"
     FROM aggregated_win_rates
     ORDER BY "averageWinRate" DESC, "totalMatches" DESC;
+    
+       
     
       `,
       [firstStriker, secondStriker, firstRoleBool, secondRoleBool]

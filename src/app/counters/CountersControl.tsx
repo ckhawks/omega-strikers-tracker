@@ -136,14 +136,15 @@ export default function CountersControl() {
                 <th>Role</th>
                 <th>Combined Win Rate (%)</th>
                 <th>
-                  Win Rate vs <StrikerAvatar striker={firstStriker} />
+                  Win Rate vs{"  "}
+                  <StrikerAvatar striker={firstStriker} />
                   {firstStriker}
                 </th>
                 <th>
-                  Win Rate vs <StrikerAvatar striker={secondStriker} />
+                  Win Rate vs{"  "}
+                  <StrikerAvatar striker={secondStriker} />
                   {secondStriker}
                 </th>
-                <th>Matches Played</th>
               </tr>
             </thead>
             <tbody>
@@ -155,9 +156,30 @@ export default function CountersControl() {
                   </td>
                   <td>{striker.opponentRole ? "Goalie" : "Forward"}</td>
                   <td>{Number(striker.averageWinRate).toFixed(2)}%</td>
-                  <td>{Number(striker.winRateAgainstStrikerA).toFixed(2)}%</td>
-                  <td>{Number(striker.winRateAgainstStrikerB).toFixed(2)}%</td>
-                  <td>{striker.totalMatches}</td>
+                  <td>
+                    {striker.matchesAgainstStrikerA !== null ? (
+                      <>
+                        {Number(striker.winRateAgainstStrikerA).toFixed(2)}%{" "}
+                        <span className={styles.small}>
+                          {striker.matchesAgainstStrikerA}
+                        </span>
+                      </>
+                    ) : (
+                      "N/A"
+                    )}
+                  </td>
+                  <td>
+                    {striker.matchesAgainstStrikerB !== null ? (
+                      <>
+                        {Number(striker.winRateAgainstStrikerB).toFixed(2)}%{" "}
+                        <span className={styles.small}>
+                          {striker.matchesAgainstStrikerB}
+                        </span>
+                      </>
+                    ) : (
+                      "N/A"
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

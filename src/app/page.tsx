@@ -1,5 +1,4 @@
 import styles from "./main.module.scss";
-import { Button } from "react-bootstrap";
 import { db } from "../util/db/db";
 import Link from "next/link";
 import NavigationBar from "@/components/NavigationBar";
@@ -7,6 +6,10 @@ import { RANKS } from "@/constants/ranks";
 import { RANK_BALANCE_RANGES } from "@/constants/rankBalance";
 
 export const revalidate = 1;
+
+export const metadata = {
+  title: "Matches - OS Tracker",
+};
 
 export default async function Home() {
   const matches = await db(

@@ -8,6 +8,7 @@ import { STRIKERS } from "@/constants/strikers";
 import { ARENAS } from "@/constants/arenas";
 import StrikerAvatar from "@/components/StrikerAvatar";
 import { RANKS } from "@/constants/ranks";
+import SetTitle from "@/components/SetTitle";
 
 export default function WinRateCalculator() {
   const [teamA, setTeamA] = useState([
@@ -76,6 +77,7 @@ export default function WinRateCalculator() {
   return (
     <>
       <NavigationBar />
+      <SetTitle title={"Match Search - OS Tracker"} />
       <div className={styles.main}>
         <div className={styles.winRateCalculator}>
           <h2>Search for Matches</h2>

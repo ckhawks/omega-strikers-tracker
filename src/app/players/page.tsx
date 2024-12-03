@@ -7,6 +7,10 @@ import StrikerAvatar from "@/components/StrikerAvatar";
 
 export const revalidate = 1;
 
+export const metadata = {
+  title: "Players - OS Tracker",
+};
+
 const formatDuration = (seconds: number) => {
   const days = Math.floor(seconds / (24 * 3600));
   seconds %= 24 * 3600;

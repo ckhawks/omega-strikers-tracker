@@ -5,6 +5,10 @@ import NavigationBar from "@/components/NavigationBar";
 import { STRIKERS } from "@/constants/strikers"; // Import your strikers array here
 import StrikerAvatar from "@/components/StrikerAvatar";
 
+export const metadata = {
+  title: "Blu's Knowledge - OS Tracker",
+};
+
 export default function WinRateCalculator() {
   return (
     <>

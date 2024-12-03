@@ -5,6 +5,10 @@ import styles from "../main.module.scss";
 import NavigationBar from "@/components/NavigationBar";
 import StrikerAvatar from "@/components/StrikerAvatar";
 
+export const metadata = {
+  title: "Bans by Map - OS Tracker",
+};
+
 export default async function Bans() {
   // Query for top strikers by win rate
   const bansByWinRate = await db(

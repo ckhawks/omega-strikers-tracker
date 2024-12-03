@@ -8,6 +8,7 @@ import { insertMatch } from "@/actions/insertMatch";
 import { ARENAS } from "@/constants/arenas";
 import { STRIKERS } from "@/constants/strikers";
 import { RANKS } from "@/constants/ranks";
+import SetTitle from "@/components/SetTitle";
 
 const PlayerSection = (props: { players: any; number: number }) => {
   return (
@@ -321,6 +322,7 @@ export default function CreateMatch() {
   return (
     <>
       <NavigationBar />
+      <SetTitle title={"Add Match - OS Tracker"} />
       <div className={styles.main}>
         <h1>Add Match</h1>
         <Form onSubmit={handleSubmit}>

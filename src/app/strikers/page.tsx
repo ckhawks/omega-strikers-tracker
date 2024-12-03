@@ -9,6 +9,10 @@ import StrikerWinRates from "./StrikersMapsTable";
 
 export const revalidate = 1;
 
+export const metadata = {
+  title: "Strikers - OS Tracker",
+};
+
 // Server component
 export default async function StrikersList({
   searchParams,

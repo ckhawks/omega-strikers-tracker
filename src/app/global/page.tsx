@@ -8,6 +8,10 @@ import Tooltip from "@/components/Tooltip";
 
 export const revalidate = 1;
 
+export const metadata = {
+  title: "Strikers per Map - OS Tracker",
+};
+
 export default async function GlobalStats() {
   const globalMapStrikers = await db(
     `

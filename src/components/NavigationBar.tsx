@@ -162,7 +162,7 @@ export default function NavigationBar() {
         </div>
       </div>
       <div style={{ marginLeft: "2rem" }}>
-        <img src={"core.png"} width={"100%"} />
+        <img src={"/core.png"} width={"100%"} />
       </div>
     </div>
   );

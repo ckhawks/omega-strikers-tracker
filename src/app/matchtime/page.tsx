@@ -7,6 +7,7 @@ import styles from "../main.module.scss";
 import { Button, Form } from "react-bootstrap";
 import NavigationBar from "@/components/NavigationBar";
 import { ARENAS } from "@/constants/arenas";
+import SetTitle from "@/components/SetTitle";
 
 export default function MatchTime() {
   const [map, setMap] = useState("");
@@ -69,6 +70,7 @@ export default function MatchTime() {
   return (
     <>
       <NavigationBar />
+      <SetTitle title={"Update Match with Time - OS Tracker"} />
       <div className={styles.main}>
         <h1>Update Match Time</h1>
         <form

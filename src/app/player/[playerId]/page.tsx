@@ -4,6 +4,7 @@ import NavigationBar from "@/components/NavigationBar";
 import BackButton from "@/components/BackButton";
 import StrikerAvatar from "@/components/StrikerAvatar";
 import { RANKS } from "@/constants/ranks";
+import SetTitle from "@/components/SetTitle";
 
 export const revalidate = 1;
 
@@ -367,6 +368,7 @@ export default async function PlayerDetails({
   return (
     <>
       <NavigationBar />
+      <SetTitle title={`${player.name} - OS Tracker`} />
       <div className={styles.main}>
         <div style={{ display: "flex", flexDirection: "column", gap: "0px" }}>
           <BackButton to={"/players"} text={"All players"} />

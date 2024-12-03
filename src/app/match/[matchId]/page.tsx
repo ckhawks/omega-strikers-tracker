@@ -4,6 +4,7 @@ import NavigationBar from "@/components/NavigationBar";
 import StrikerAvatar from "@/components/StrikerAvatar";
 import { RANKS } from "@/constants/ranks";
 import { getRankBalanceLabel } from "@/constants/rankBalance";
+import SetTitle from "@/components/SetTitle";
 
 export const revalidate = 1;
 
@@ -98,6 +99,9 @@ ORDER BY mp."teamNumber";
   return (
     <>
       <NavigationBar />
+      <SetTitle
+        title={`${match.team1Score}-${match.team2Score} ${match.map} on ${formattedDate} - OS Tracker`}
+      />
       <div className={styles.main}>
         {/* <h1>Match Details</h1> */}
         <h1>
