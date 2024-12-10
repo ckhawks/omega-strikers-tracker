@@ -432,12 +432,15 @@ export default async function PlayerDetails({
                       Losses = { Forwards: [], Goalies: [] },
                     } = mapStrikerData ? mapStrikerData[1] : {};
 
+                    const getCountForStriker = (array: any[], striker: any) =>
+                      array.find((entry: any) => entry.striker === striker)
+                        ?.count || 0;
+
                     return (
                       <tr key={map.map}>
                         <td>{map.map}</td>
                         <td>{map.winRate}%</td>
                         <td>{map.matchesPlayed}</td>
-                        {/* <td>{map.wins}</td> */}
 
                         {/* Wins - Forwards */}
                         <td>
@@ -447,27 +450,41 @@ export default async function PlayerDetails({
                                 (
                                   {
                                     striker,
-                                    count,
+                                    count: winsCount,
                                   }: { striker: any; count: number },
                                   index: number
-                                ) => (
-                                  <div
-                                    key={index}
-                                    style={{
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    <StrikerAvatar
-                                      striker={striker}
-                                      rightMargin={false}
-                                    />
-                                    <span style={{ fontSize: "12px" }}>
-                                      {count}x
-                                    </span>
-                                  </div>
-                                )
+                                ) => {
+                                  const lossesCount = getCountForStriker(
+                                    Losses.Forwards,
+                                    striker
+                                  );
+                                  return (
+                                    <div
+                                      key={index}
+                                      style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <StrikerAvatar
+                                        striker={striker}
+                                        rightMargin={false}
+                                      />
+                                      <span
+                                        style={{
+                                          fontSize: "12px",
+                                          fontWeight:
+                                            winsCount > lossesCount
+                                              ? "bold"
+                                              : "normal",
+                                        }}
+                                      >
+                                        {winsCount}x
+                                      </span>
+                                    </div>
+                                  );
+                                }
                               )
                             ) : (
                               <p>N/A</p>
@@ -483,27 +500,44 @@ export default async function PlayerDetails({
                                 (
                                   {
                                     striker,
-                                    count,
-                                  }: { striker: any; count: number },
+                                    count: lossesCount,
+                                  }: {
+                                    striker: any;
+                                    count: number;
+                                  },
                                   index: number
-                                ) => (
-                                  <div
-                                    key={index}
-                                    style={{
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    <StrikerAvatar
-                                      striker={striker}
-                                      rightMargin={false}
-                                    />
-                                    <span style={{ fontSize: "12px" }}>
-                                      {count}x
-                                    </span>
-                                  </div>
-                                )
+                                ) => {
+                                  const winsCount = getCountForStriker(
+                                    Wins.Forwards,
+                                    striker
+                                  );
+                                  return (
+                                    <div
+                                      key={index}
+                                      style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <StrikerAvatar
+                                        striker={striker}
+                                        rightMargin={false}
+                                      />
+                                      <span
+                                        style={{
+                                          fontSize: "12px",
+                                          fontWeight:
+                                            lossesCount > winsCount
+                                              ? "bold"
+                                              : "normal",
+                                        }}
+                                      >
+                                        {lossesCount}x
+                                      </span>
+                                    </div>
+                                  );
+                                }
                               )
                             ) : (
                               <p>N/A</p>
@@ -519,27 +553,41 @@ export default async function PlayerDetails({
                                 (
                                   {
                                     striker,
-                                    count,
+                                    count: winsCount,
                                   }: { striker: any; count: number },
                                   index: number
-                                ) => (
-                                  <div
-                                    key={index}
-                                    style={{
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    <StrikerAvatar
-                                      striker={striker}
-                                      rightMargin={false}
-                                    />
-                                    <span style={{ fontSize: "12px" }}>
-                                      {count}x
-                                    </span>
-                                  </div>
-                                )
+                                ) => {
+                                  const lossesCount = getCountForStriker(
+                                    Losses.Goalies,
+                                    striker
+                                  );
+                                  return (
+                                    <div
+                                      key={index}
+                                      style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <StrikerAvatar
+                                        striker={striker}
+                                        rightMargin={false}
+                                      />
+                                      <span
+                                        style={{
+                                          fontSize: "12px",
+                                          fontWeight:
+                                            winsCount > lossesCount
+                                              ? "bold"
+                                              : "normal",
+                                        }}
+                                      >
+                                        {winsCount}x
+                                      </span>
+                                    </div>
+                                  );
+                                }
                               )
                             ) : (
                               <p>N/A</p>
@@ -555,27 +603,44 @@ export default async function PlayerDetails({
                                 (
                                   {
                                     striker,
-                                    count,
-                                  }: { striker: any; count: number },
+                                    count: lossesCount,
+                                  }: {
+                                    striker: any;
+                                    count: number;
+                                  },
                                   index: number
-                                ) => (
-                                  <div
-                                    key={index}
-                                    style={{
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    <StrikerAvatar
-                                      striker={striker}
-                                      rightMargin={false}
-                                    />
-                                    <span style={{ fontSize: "12px" }}>
-                                      {count}x
-                                    </span>
-                                  </div>
-                                )
+                                ) => {
+                                  const winsCount = getCountForStriker(
+                                    Wins.Goalies,
+                                    striker
+                                  );
+                                  return (
+                                    <div
+                                      key={index}
+                                      style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <StrikerAvatar
+                                        striker={striker}
+                                        rightMargin={false}
+                                      />
+                                      <span
+                                        style={{
+                                          fontSize: "12px",
+                                          fontWeight:
+                                            lossesCount > winsCount
+                                              ? "bold"
+                                              : "normal",
+                                        }}
+                                      >
+                                        {lossesCount}x
+                                      </span>
+                                    </div>
+                                  );
+                                }
                               )
                             ) : (
                               <p>N/A</p>

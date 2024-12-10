@@ -10,7 +10,35 @@ import { STRIKERS } from "@/constants/strikers";
 import { RANKS } from "@/constants/ranks";
 import SetTitle from "@/components/SetTitle";
 
+const warningThresholds = {
+  goals: 10,
+  assists: 10,
+  saves: 200,
+  knockouts: 20,
+  damage: 100000,
+  shots: 200,
+  redirects: 400,
+  orbs: 100,
+};
+
 const PlayerSection = (props: { players: any; number: number }) => {
+  const [warnings, setWarnings] = useState<{ [key: string]: boolean }>({});
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    const field = name.replace(`player${props.number}`, ""); // Remove player prefix
+    const numericValue = parseFloat(value);
+
+    // @ts-ignore
+    if (warningThresholds[field] !== undefined) {
+      setWarnings((prev) => ({
+        ...prev,
+        // @ts-ignore
+        [field]: numericValue > warningThresholds[field],
+      }));
+    }
+  };
+
   return (
     <div style={{ border: "1px solid grey", padding: "1rem" }}>
       <Row>
@@ -98,7 +126,7 @@ const PlayerSection = (props: { players: any; number: number }) => {
         </Col>
       </Row>
 
-      <Row>
+      {/* <Row>
         <Col>
           <Form.Group>
             <Form.Label>Goals</Form.Label>
@@ -187,6 +215,28 @@ const PlayerSection = (props: { players: any; number: number }) => {
             />
           </Form.Group>
         </Col>
+      </Row> */}
+      <Row>
+        {Object.entries(warningThresholds).map(([field, threshold]) => (
+          <Col key={field}>
+            <Form.Group>
+              <Form.Label>
+                {field.charAt(0).toUpperCase() + field.slice(1)}
+              </Form.Label>
+              <Form.Control
+                name={`player${props.number}${field}`}
+                required
+                type="number"
+                min={0}
+                onChange={handleChange}
+                style={{
+                  backgroundColor: warnings[field] ? "#f1e1c3" : "white",
+                  borderColor: warnings[field] ? "#f2c264" : "#dee2e6",
+                }}
+              />
+            </Form.Group>
+          </Col>
+        ))}
       </Row>
     </div>
   );
@@ -329,7 +379,12 @@ export default function CreateMatch() {
           <h3>Match Details</h3>
           <Form.Group>
             <Form.Label>Arena</Form.Label>
-            <Form.Select name="arena" required defaultValue={undefined}>
+            <Form.Select
+              name="arena"
+              required
+              defaultValue={undefined}
+              style={{ maxWidth: "400px", marginBottom: ".5rem" }}
+            >
               <option disabled value={undefined}>
                 Select Arena
               </option>
@@ -342,7 +397,7 @@ export default function CreateMatch() {
               })}
             </Form.Select>
           </Form.Group>
-          <Form.Group>
+          <Form.Group style={{ maxWidth: "400px", marginBottom: ".5rem" }}>
             <Form.Label>Match Duration</Form.Label>
             <Row style={{ maxWidth: "200px" }}>
               <Col>
@@ -364,6 +419,7 @@ export default function CreateMatch() {
               onChange={handleDateChange}
             />
           </Form.Group>
+          <br />
           <Row>
             <Col xxl={6} xl={12}>
               <h4>Team A</h4>
@@ -371,6 +427,7 @@ export default function CreateMatch() {
                 <Form.Label>Set Score</Form.Label>
                 <Form.Control type="number" name="team1Score" min={0} max={3} />
               </Form.Group>
+              <br />
               <PlayerSection players={players} number={1} />
               <PlayerSection players={players} number={2} />
               <PlayerSection players={players} number={3} />
@@ -381,11 +438,13 @@ export default function CreateMatch() {
                 <Form.Label>Set Score</Form.Label>
                 <Form.Control type="number" name="team2Score" min={0} max={3} />
               </Form.Group>
+              <br />
               <PlayerSection players={players} number={4} />
               <PlayerSection players={players} number={5} />
               <PlayerSection players={players} number={6} />
             </Col>
           </Row>
+          <br />
           <Button type="submit">Create match</Button>
           {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
           {successMessage && <p style={{ color: "green" }}>{successMessage}</p>}
