@@ -61,6 +61,8 @@ SELECT
     "duration",
     avg_match_rank,
     ranked_player_count,
+    team1_avg_rank, 
+    team2_avg_rank, 
     CASE 
         WHEN ranked_player_count <= 3 THEN 'Not enough data'
         WHEN ABS(team1_avg_rank - team2_avg_rank) <= 0.34 THEN 'Perfectly Balanced'
@@ -280,63 +282,91 @@ FROM win_loss_stats;`,
           </div>
         </div>
         <div>
-          {matches &&
-            matches.map((match, index) => {
-              return (
-                <div key={match.id} className={styles["match-item"]}>
-                  <span>Match {matches.length - index}</span>
-                  <b>{match.map}</b>
-                  <span>
-                    {match.team1Score} - {match.team2Score}
-                  </span>
-                  <span>
-                    {match.duration !== 0
-                      ? `${Math.floor(match.duration / 60).toLocaleString(
-                          "en-US",
-                          { minimumIntegerDigits: 2, useGrouping: false }
-                        )}:${(match.duration % 60).toLocaleString("en-US", {
+          {matches.map((match, index) => {
+            // Parse the rank data
+            const avgMatchRank = parseFloat(match.avg_match_rank);
+            const team1AvgRank = parseFloat(match.team1_avg_rank);
+            const team2AvgRank = parseFloat(match.team2_avg_rank);
+
+            // Calculate rank offset and determine favorability strength
+            const rankDifference = Math.abs(team1AvgRank - team2AvgRank);
+            const favorabilityStrength =
+              rankDifference <= 0.33
+                ? ""
+                : rankDifference <= 1
+                ? "Slightly"
+                : rankDifference <= 1.5
+                ? "Moderately"
+                : "Very";
+
+            // Determine favorability direction
+            const favorabilityText =
+              team1AvgRank > team2AvgRank ? (
+                <>
+                  Favored
+                  {`, `}
+                  {`${favorabilityStrength} (+${rankDifference.toFixed(2)})`}
+                </>
+              ) : team1AvgRank < team2AvgRank ? (
+                <>
+                  Underdog
+                  {`, `}{" "}
+                  {`${favorabilityStrength} (-${rankDifference.toFixed(2)})`}
+                </>
+              ) : (
+                <>{`Equal (0.00)`}</>
+              );
+
+            return (
+              <div key={match.id} className={styles["match-item"]}>
+                <span>Match {matches.length - index}</span>
+                <b>{match.map}</b>
+                <span>
+                  {match.team1Score} - {match.team2Score}
+                </span>
+                <span>
+                  {match.duration !== 0
+                    ? `${Math.floor(match.duration / 60).toLocaleString(
+                        "en-US",
+                        {
                           minimumIntegerDigits: 2,
                           useGrouping: false,
-                        })}`
-                      : "Unknown"}
-                  </span>
-                  {match.createdAt.toString()}
-                  <span>
-                    {match.avg_match_rank ? (
-                      <img
-                        src={`/rank_images/${
-                          // @ts-ignore
-                          RANKS[Math.round(match.avg_match_rank)].imagePath
-                        }`}
-                        width={32}
-                        style={{ marginRight: "8px" }}
-                      />
-                    ) : (
-                      ""
-                    )}
-                    {
+                        }
+                      )}:${(match.duration % 60).toLocaleString("en-US", {
+                        minimumIntegerDigits: 2,
+                        useGrouping: false,
+                      })}`
+                    : "Unknown"}
+                </span>
+                <span>
+                  {new Date(match.createdAt).toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+                {/* Combined average rank and favorability */}
+                <span style={{ display: "flex", alignItems: "center" }}>
+                  <img
+                    src={`/rank_images/${
                       // @ts-ignore
-                      RANKS[Math.round(match.avg_match_rank)].name ?? "N/A"
-                    }
-                  </span>
-                  <span>{match.balance_level}</span>
-                  {/* <p>
-                  <strong>Average Rank:</strong>{" "}
-                  {match.avg_match_rank
-                    ? Number(match.avg_match_rank).toFixed(2)
-                    : "N/A"}
-                </p>
-                <p>
-                  <strong>Ranked Player Count:</strong>{" "}
-                  {match.ranked_player_count}
-                </p>
-                <p>
-                  <strong>Balance Level:</strong> {match.balance_level}
-                </p> */}
-                  <Link href={"/match/" + match.id}>View</Link>
-                </div>
-              );
-            })}
+                      RANKS[Math.round(avgMatchRank)].imagePath
+                    }`}
+                    width={32}
+                    style={{ marginRight: "8px" }}
+                  />
+                  {
+                    // @ts-ignore
+                    RANKS[Math.round(avgMatchRank)].name ?? "N/A"
+                  }
+                </span>
+                <span>{favorabilityText}</span>
+                <Link href={"/match/" + match.id}>View</Link>
+              </div>
+            );
+          })}
         </div>
       </div>
     </>
