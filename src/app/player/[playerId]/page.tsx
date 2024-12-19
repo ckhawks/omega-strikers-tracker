@@ -427,10 +427,14 @@ export default async function PlayerDetails({
                     const mapStrikerData = mapStrikers.find(
                       ([mapName]) => mapName === map.map
                     );
+                    console.log("mapStrikerData", mapStrikerData);
+
                     const {
                       Wins = { Forwards: [], Goalies: [] },
                       Losses = { Forwards: [], Goalies: [] },
                     } = mapStrikerData ? mapStrikerData[1] : {};
+                    console.log("wins", Wins);
+                    console.log("losses", Losses);
 
                     const getCountForStriker = (array: any[], striker: any) =>
                       array.find((entry: any) => entry.striker === striker)
@@ -454,10 +458,11 @@ export default async function PlayerDetails({
                                   }: { striker: any; count: number },
                                   index: number
                                 ) => {
-                                  const lossesCount = getCountForStriker(
-                                    Losses.Forwards,
-                                    striker
-                                  );
+                                  const lossesCount: number =
+                                    getCountForStriker(
+                                      Losses.Forwards,
+                                      striker
+                                    );
                                   return (
                                     <div
                                       key={index}
@@ -475,7 +480,8 @@ export default async function PlayerDetails({
                                         style={{
                                           fontSize: "12px",
                                           fontWeight:
-                                            winsCount > lossesCount
+                                            Number(winsCount) >
+                                            Number(lossesCount)
                                               ? "bold"
                                               : "normal",
                                         }}
@@ -528,7 +534,8 @@ export default async function PlayerDetails({
                                         style={{
                                           fontSize: "12px",
                                           fontWeight:
-                                            lossesCount > winsCount
+                                            Number(lossesCount) >
+                                            Number(winsCount)
                                               ? "bold"
                                               : "normal",
                                         }}
@@ -578,7 +585,8 @@ export default async function PlayerDetails({
                                         style={{
                                           fontSize: "12px",
                                           fontWeight:
-                                            winsCount > lossesCount
+                                            Number(winsCount) >
+                                            Number(lossesCount)
                                               ? "bold"
                                               : "normal",
                                         }}
@@ -631,7 +639,8 @@ export default async function PlayerDetails({
                                         style={{
                                           fontSize: "12px",
                                           fontWeight:
-                                            lossesCount > winsCount
+                                            Number(lossesCount) >
+                                            Number(winsCount)
                                               ? "bold"
                                               : "normal",
                                         }}
