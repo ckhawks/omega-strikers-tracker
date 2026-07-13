@@ -37,3 +37,5 @@ next-env.d.ts
 
 .env
 */.env
+# playwright mcp screenshot output
+.playwright-mcp/
