@@ -83,10 +83,29 @@ async function resolvePlayerId(
   return playerId;
 }
 
+// Accept the env master token OR any active per-user IngestToken.
+async function validateToken(token: string | null): Promise<{ ok: boolean; label: string | null }> {
+  if (!token) return { ok: false, label: null };
+  if (process.env.INGEST_TOKEN && token === process.env.INGEST_TOKEN) {
+    return { ok: true, label: "master" };
+  }
+  const rows = await db(
+    `SELECT id, label FROM "IngestToken" WHERE token = $1 AND active = true`,
+    [token]
+  );
+  if (rows.length) {
+    await db(`UPDATE "IngestToken" SET "lastUsedAt" = now() WHERE id = $1`, [rows[0].id]);
+    return { ok: true, label: rows[0].label };
+  }
+  return { ok: false, label: null };
+}
+
 export async function POST(request: Request) {
-  if ((process.env.INGEST_TOKEN || "") === "" || request.headers.get("x-ingest-token") !== process.env.INGEST_TOKEN) {
+  const auth = await validateToken(request.headers.get("x-ingest-token"));
+  if (!auth.ok) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  const tokenLabel = auth.label;
 
   let payload: Payload;
   try {
@@ -103,9 +122,9 @@ export async function POST(request: Request) {
 
   // Always record the raw report for provenance / reprocessing.
   await db(
-    `INSERT INTO "MatchReport" ("gameId", "matchSignature", "reporterAccountId", "rawPayload")
-     VALUES ($1, $2, $3, $4)`,
-    [gameId, signature, strOrNull(payload.reporter_account_id), JSON.stringify(payload)]
+    `INSERT INTO "MatchReport" ("gameId", "matchSignature", "reporterAccountId", "rawPayload", "tokenLabel")
+     VALUES ($1, $2, $3, $4, $5)`,
+    [gameId, signature, strOrNull(payload.reporter_account_id), JSON.stringify(payload), tokenLabel]
   );
 
   // Dedup: does a match with this game_id / signature already exist?

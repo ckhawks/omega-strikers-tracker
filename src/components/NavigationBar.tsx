@@ -117,6 +117,16 @@ export default function NavigationBar() {
               Add Match
             </Link>
           )}
+          {isAuthenticated && (
+            <Link
+              href={"/admin/tokens"}
+              className={`${styles.navItem} ${
+                pathname === "/admin/tokens" ? styles.active : ""
+              }`}
+            >
+              Tokens
+            </Link>
+          )}
           {/* {isAuthenticated && (
           <Link
             href={"/matchtime"}
