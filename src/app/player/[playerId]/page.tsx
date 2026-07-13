@@ -860,18 +860,24 @@ export default async function PlayerDetails({
 
                   <div>
                     <center>
-                      <img
-                        src={`/rank_images/${
-                          // @ts-ignore
-                          RANKS[Math.round(match.averageRank)].imagePath
-                        }`}
-                        width={64}
-                      />
-                      <br />
-                      {
-                        // @ts-ignore
-                        RANKS[Math.round(match.averageRank)].name ?? "N/A"
-                      }
+                      {match.averageRank && Math.round(match.averageRank) > 0 ? (
+                        <>
+                          <img
+                            src={`/rank_images/${
+                              // @ts-ignore
+                              RANKS[Math.round(match.averageRank)].imagePath
+                            }`}
+                            width={64}
+                          />
+                          <br />
+                          {
+                            // @ts-ignore
+                            RANKS[Math.round(match.averageRank)].name ?? "N/A"
+                          }
+                        </>
+                      ) : (
+                        <span style={{ color: "#aaa" }}>—</span>
+                      )}
                       <p style={{ color: "grey" }}>
                         ({match.rankedPlayersCount} ranks)
                       </p>

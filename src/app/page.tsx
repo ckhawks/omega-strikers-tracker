@@ -11,7 +11,12 @@ export const metadata = {
   title: "Matches - OS Tracker",
 };
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: { source?: string };
+}) {
+  const sourceFilter = searchParams?.source; // "auto" | "legacy" | undefined
   const matches = await db(
     ` 
       WITH match_player_ranks AS (
@@ -76,6 +81,19 @@ ORDER BY "createdAt" DESC;
     `,
     []
   );
+
+  // Lightweight side-lookup for the new auto-capture fields (avoids reworking the
+  // big rank CTE above) + apply the source filter in JS.
+  const matchMetaRows = await db(`SELECT id, source, mode FROM "Match"`, []);
+  const matchMeta: Record<string, { source: string; mode: string | null }> = {};
+  for (const r of matchMetaRows) matchMeta[r.id] = { source: r.source, mode: r.mode };
+
+  const filteredMatches =
+    sourceFilter === "auto"
+      ? matches.filter((m: any) => matchMeta[m.id]?.source === "auto_capture")
+      : sourceFilter === "legacy"
+      ? matches.filter((m: any) => matchMeta[m.id]?.source === "legacy_manual")
+      : matches;
 
   const matchRankData = await db(
     `
@@ -281,10 +299,38 @@ FROM win_loss_stats;`,
             ))}
           </div>
         </div>
+        <div style={{ display: "flex", gap: "0.5rem", margin: "1rem 0" }}>
+          {[
+            ["All", undefined],
+            ["Auto-captured", "auto"],
+            ["Legacy", "legacy"],
+          ].map(([label, val]: any) => {
+            const active = (sourceFilter ?? undefined) === (val ?? undefined);
+            return (
+              <Link
+                key={label}
+                href={val ? `/?source=${val}` : "/"}
+                className={styles.navItem}
+                style={{
+                  fontWeight: active ? 700 : 400,
+                  background: active ? "#f2c264" : undefined,
+                }}
+              >
+                {label}
+              </Link>
+            );
+          })}
+          <span style={{ alignSelf: "center", color: "#888" }}>
+            {filteredMatches.length} matches
+          </span>
+        </div>
         <div>
-          {matches.map((match, index) => {
-            // Parse the rank data
+          {filteredMatches.map((match: any, index: number) => {
+            // Parse the rank data (null for auto-captured matches)
             const avgMatchRank = parseFloat(match.avg_match_rank);
+            const hasLegacyRank =
+              Number.isFinite(avgMatchRank) && avgMatchRank > 0;
+            const meta = matchMeta[match.id];
             const team1AvgRank = parseFloat(match.team1_avg_rank);
             const team2AvgRank = parseFloat(match.team2_avg_rank);
 
@@ -299,9 +345,9 @@ FROM win_loss_stats;`,
                 ? "Moderately"
                 : "Very";
 
-            // Determine favorability direction
-            const favorabilityText =
-              team1AvgRank > team2AvgRank ? (
+            // Determine favorability direction (legacy ranked matches only)
+            const favorabilityText = !hasLegacyRank ? null : team1AvgRank >
+              team2AvgRank ? (
                 <>
                   Favored
                   {`, `}
@@ -319,8 +365,22 @@ FROM win_loss_stats;`,
 
             return (
               <div key={match.id} className={styles["match-item"]}>
-                <span>Match {matches.length - index}</span>
+                <span>Match {filteredMatches.length - index}</span>
                 <b>{match.map}</b>
+                {meta?.source === "auto_capture" && (
+                  <span
+                    title="Auto-captured"
+                    style={{
+                      fontSize: "0.75em",
+                      padding: "1px 6px",
+                      borderRadius: "999px",
+                      background: "#1f7a3f",
+                      color: "white",
+                    }}
+                  >
+                    {meta.mode || "Auto"}
+                  </span>
+                )}
                 <span>
                   {match.team1Score} - {match.team2Score}
                 </span>
@@ -349,18 +409,24 @@ FROM win_loss_stats;`,
                 </span>
                 {/* Combined average rank and favorability */}
                 <span style={{ display: "flex", alignItems: "center" }}>
-                  <img
-                    src={`/rank_images/${
-                      // @ts-ignore
-                      RANKS[Math.round(avgMatchRank)].imagePath
-                    }`}
-                    width={32}
-                    style={{ marginRight: "8px" }}
-                  />
-                  {
-                    // @ts-ignore
-                    RANKS[Math.round(avgMatchRank)].name ?? "N/A"
-                  }
+                  {hasLegacyRank ? (
+                    <>
+                      <img
+                        src={`/rank_images/${
+                          // @ts-ignore
+                          RANKS[Math.round(avgMatchRank)].imagePath
+                        }`}
+                        width={32}
+                        style={{ marginRight: "8px" }}
+                      />
+                      {
+                        // @ts-ignore
+                        RANKS[Math.round(avgMatchRank)].name ?? "N/A"
+                      }
+                    </>
+                  ) : (
+                    <span style={{ color: "#aaa" }}>—</span>
+                  )}
                 </span>
                 <span>{favorabilityText}</span>
                 <Link href={"/match/" + match.id}>View</Link>

@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 // const inter = Inter({ subsets: ["latin"] });
 
 import "bootstrap/dist/css/bootstrap.min.css";
+import NewMatchBanner from "@/components/NewMatchBanner";
 
 export default function RootLayout({
   children,
@@ -18,7 +19,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <NewMatchBanner />
+      </body>
     </html>
   );
 }

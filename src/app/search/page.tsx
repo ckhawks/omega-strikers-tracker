@@ -321,10 +321,10 @@ export default function WinRateCalculator() {
                         ) : (
                           ""
                         )}
-                        {
-                          // @ts-ignore
-                          RANKS[Math.round(match.averageRank)].name ?? "N/A"
-                        }
+                        {match.averageRank
+                          ? // @ts-ignore
+                            RANKS[Math.round(match.averageRank)].name ?? "N/A"
+                          : "—"}
                       </td>
                       <td>
                         <a
