@@ -5,12 +5,14 @@ A real match captures from the game client → POSTs to `/api/ingest` → lands 
 VPS DB with dedup, account mapping, awakenings, MVP/goalie/rank, sets, mode, map, duration.
 
 ## To go fully live (beyond the dev machine)
-- [ ] **Deploy the Next.js site to the VPS.** Captures currently only land while
-      `next dev` runs locally. Deploy the app, then set the mod's `ENDPOINT`
-      (in `Mods/OSCapture/Scripts/main.lua`) to the VPS URL.
-- [ ] **Distribute the mod to friends.** Package UE4SS + OSCapture with each
-      person's token/endpoint. This also turns on the **3-reporter merge**
-      (fills in each friend's MMR, which only replicates to their own client).
+- [x] **Deploy the Next.js site to the VPS.** Merged to `main` and pushed
+      (2026-07-13). Runs via systemd (`os-tracker`, port 3010) behind nginx
+      subdomain. Then set the mod's `ENDPOINT` in `Mods/OSCapture/config.txt`
+      (no longer the Lua) to the VPS URL.
+- [ ] **Distribute the mod to friends.** Ship UE4SS + OSCapture folder; each
+      friend edits `config.txt` (ENDPOINT + their token from `/admin/tokens`).
+      This also turns on the **3-reporter merge** (fills in each friend's MMR,
+      which only replicates to their own client).
 - [ ] **Seed identity mapping.** Auto-capture creates a *separate* Player per game
       account, so auto "stlrc" ≠ legacy "stlrc". Seed `PlayerAccount`
       (gameAccountId → existing Player id) for the friend group.
@@ -21,9 +23,17 @@ VPS DB with dedup, account mapping, awakenings, MVP/goalie/rank, sets, mode, map
 - [ ] **Play one Ranked / draft match** → validates bans + rank/MMR + duration
       (Normal/Quickplay have no ban phase and no MMR).
 
+## Security / deps
+- [ ] **Upgrade to `next@16`.** Bumped to `next@14.2.35` (2026-07-13) which cleared
+      13/18 audit findings incl. the critical middleware auth-bypass. Remaining 5
+      (RSC/image DoS + dev-tooling `glob` ReDoS + build-time postcss XSS) only fix
+      in next@16 — a breaking 14→15→16 + React 18→19 migration. No RCE / 0 critical
+      on 14.2.35. Do as its own effort, not on deploy day.
+
 ## Polish / deferred
-- [ ] **Sound cue on upload.** Transport is done; the actual sound play isn't wired
-      (needs a `UAkAudioEvent` + play call — small mod investigation).
+- [x] **Sound cue on upload.** Done — plays a random ability SFX via
+      `PostEventByName` after upload (`sfx_cha_generic_evade` /
+      `sfx_cha_luna_skin02_bigRocket_cast`). F7 browses sounds.
 - [ ] **Player-page MMR trend** (match page already shows per-player MMR).
 - [ ] **In-play duration.** Current `duration` = total match session time (incl.
       champ select/draft/intermissions). Pure in-play would need a match-start hook.
@@ -33,7 +43,7 @@ VPS DB with dedup, account mapping, awakenings, MVP/goalie/rank, sets, mode, map
       duplicate of `MagnetizedSoles.webp`) — harmless.
 
 ## Housekeeping
-- [ ] **Merge `auto-capture-integration` → main** after review.
+- [x] **Merge `auto-capture-integration` → main** (2026-07-13).
 
 ## Reference
 - Mod (not in repo): `…/OmegaStrikers/Binaries/Win64/Mods/OSCapture/Scripts/main.lua`
