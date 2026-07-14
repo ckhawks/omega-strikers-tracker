@@ -23,10 +23,13 @@ Notes:
 
 ## Auto-capture (game client → tracker)
 
-Matches are captured automatically by a UE4SS Lua mod (NOT in this repo; lives at
-`…/OmegaStrikers/Binaries/Win64/Mods/OSCapture/Scripts/main.lua`). It reads the
-game's `APMGameState.MatchEventLog` at match end (all modes incl. customs), builds a
-JSON payload, and POSTs it via Windows `curl.exe` (`os.execute`) — no companion process.
+Matches are captured automatically by a UE4SS Lua mod, vendored at `mod/OSCapture/`.
+The game folder (`…/Binaries/Win64/Mods/OSCapture`) is a **directory junction** to it,
+so editing `mod/OSCapture/Scripts/main.lua` edits the live mod and git tracks it.
+`mod/OSCapture/config.txt` is gitignored (holds the per-machine token); `config.txt.sample`
+is the template. It reads the game's `APMGameState.MatchEventLog` at match end (all modes
+incl. customs), builds a JSON payload, and POSTs it via Windows `curl.exe` (`os.execute`)
+— no companion process. **How to extend the mod: `docs/MOD-DEVELOPMENT.md`.**
 
 - Ingest: `POST /api/ingest`, header `x-ingest-token` == env `INGEST_TOKEN`. Dedup on
   `Match.gameId` (falls back to `matchSignature`). Auto-creates a `Player` +

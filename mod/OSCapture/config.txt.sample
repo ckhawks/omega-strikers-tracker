@@ -1,0 +1,8 @@
+# OSCapture config -- copy this to config.txt and edit, then launch Omega Strikers.
+# Format is KEY=VALUE. Lines starting with # are ignored.
+
+# The tracker's ingest URL:
+ENDPOINT=https://omegastrikers.stlr.cx/api/ingest
+
+# Your personal ingest token (generated at /admin/tokens).
+TOKEN=PASTE_YOUR_TOKEN_HERE

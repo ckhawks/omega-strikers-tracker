@@ -39,3 +39,10 @@ next-env.d.ts
 */.env
 # playwright mcp screenshot output
 .playwright-mcp/
+
+# OSCapture mod: real per-machine config (holds a token) + runtime artifacts.
+# The game folder junctions to mod/OSCapture, so these appear here at runtime.
+mod/OSCapture/config.txt
+mod/OSCapture/**/*_dump.txt
+mod/OSCapture/**/*_payload.json
+mod/OSCapture/**/*_sounds.txt
