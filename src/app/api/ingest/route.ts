@@ -48,10 +48,38 @@ type Payload = {
   mvp_account_id?: string;
   bans?: { team1?: string | null; team2?: string | null };
   sets?: { set?: number; winning_team?: number; team1_goals?: number; team2_goals?: number }[];
+  // Raw striker draft log (game's CharactersSelected). Interleaves hover states
+  // (null striker_code) with lock-ins; reduced to per-player pick order below.
+  selections?: { set?: number; pick_index?: number; account_id?: string; team?: number; striker_code?: string }[];
   players?: IncomingPlayer[];
 };
 
 const int = (v: any) => (Number.isFinite(+v) ? Math.trunc(+v) : 0);
+
+// Reduce the raw striker-draft log into per-player pick order + first-pick team.
+// The CharactersSelected log interleaves hovers (null striker_code) with lock-ins;
+// a player's confirmed pick is their LAST non-null selection. Draft order = players
+// ranked by that selection's pick_index; first-pick team = the team of pick #1.
+// Verified against a real 2-player draft (alternating hovers, then locks in order).
+function deriveStrikerDraft(selections: Payload["selections"]): {
+  orderByAccount: Map<string, number>;
+  firstPickTeam: number | null;
+} {
+  const confirmed = new Map<string, { pickIndex: number; team: number }>();
+  for (const sel of selections || []) {
+    const acct = strOrNull(sel.account_id);
+    const striker = strOrNull(sel.striker_code);
+    if (!acct || !striker) continue; // skip hover / placeholder rows
+    const idx = int(sel.pick_index);
+    const prev = confirmed.get(acct);
+    if (!prev || idx > prev.pickIndex) confirmed.set(acct, { pickIndex: idx, team: int(sel.team) });
+  }
+  const ranked = Array.from(confirmed.entries()).sort((a, b) => a[1].pickIndex - b[1].pickIndex);
+  const orderByAccount = new Map<string, number>();
+  ranked.forEach(([acct], i) => orderByAccount.set(acct, i + 1));
+  const firstPickTeam = ranked.length ? ranked[0][1].team || null : null;
+  return { orderByAccount, firstPickTeam };
+}
 const numOrNull = (v: any) => (v === undefined || v === null || v === "" ? null : +v);
 const strOrNull = (v: any) => (v === undefined || v === null || v === "" || v === "nil" ? null : String(v));
 
@@ -161,6 +189,7 @@ export async function POST(request: Request) {
   const team1Sets = sets.filter((s) => int(s.winning_team) === 1).length;
   const team2Sets = sets.filter((s) => int(s.winning_team) === 2).length;
   const winningTeam = int(payload.winning_team);
+  const { orderByAccount: strikerPickOrder, firstPickTeam } = deriveStrikerDraft(payload.selections);
 
   try {
     const matchId = await withTransaction(async (q) => {
@@ -171,8 +200,8 @@ export async function POST(request: Request) {
         `INSERT INTO "Match"
           (map, "team1Won", "team1Score", "team2Score", duration, source, "seasonId",
            "gameId", "matchSignature", mode, terrain, "winningTeam", "mvpAccountId",
-           "team1BanStriker", "team2BanStriker", "capturedAt")
-         VALUES ($1,$2,$3,$4,$5,'auto_capture',$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+           "team1BanStriker", "team2BanStriker", "capturedAt", "firstPickTeam")
+         VALUES ($1,$2,$3,$4,$5,'auto_capture',$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
          RETURNING id`,
         [
           strOrNull(payload.map),
@@ -190,6 +219,7 @@ export async function POST(request: Request) {
           strOrNull(payload.bans?.team1),
           strOrNull(payload.bans?.team2),
           strOrNull(payload.captured_at),
+          firstPickTeam,
         ]
       );
       const matchId = match[0].id;
@@ -210,8 +240,8 @@ export async function POST(request: Request) {
             ("matchId","playerId","teamNumber",striker,rank,"wasGoalie",
              "statGoals","statAssists","statSaves","statKnockouts","statDamage","statShots","statRedirects","statOrbs",
              "gameAccountId",username,"strikerCode","isMvp","ownGoals",level,
-             "ratingChange","updatedRating","previousTier","updatedTier")
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
+             "ratingChange","updatedRating","previousTier","updatedTier","strikerPickOrder")
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
            RETURNING id`,
           [
             matchId,
@@ -226,6 +256,7 @@ export async function POST(request: Request) {
             isMvp, int(p.own_goals), int(p.level),
             numOrNull(p.rank?.rating_change), numOrNull(p.rank?.updated_rating),
             strOrNull(p.rank?.previous_tier), strOrNull(p.rank?.updated_tier),
+            strikerPickOrder.get(strOrNull(p.account_id) ?? "") ?? null,
           ]
         );
         const matchPlayerId = mp[0].id;

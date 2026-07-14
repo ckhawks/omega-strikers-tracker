@@ -214,12 +214,16 @@ local function buildRecord(mel, gs)
         p.shots = num(m(sum, "HitRockIntoGoalArea"))
         p.orbs = num(m(sum, "PowerUpsPickedUpCount"))
     end)
-    eachArray(m(mel, "TrainingsSelected"), function(e)
+    -- Awakening drafts (one per set, keyed by Round). `order` stays as the per-player
+    -- cumulative index (unchanged). `select_index` = position of this player's
+    -- TrainingsSelected entry in the log; grouping awakenings by `round` and sorting
+    -- players by `select_index` recovers the per-set awakening draft pick order.
+    eachArray(m(mel, "TrainingsSelected"), function(e, i)
         local p = pget(s(m(e, "SelectingPlayerId")))
         local round = num(m(e, "Round"))
         local function add(code)
             code = nameOrNil(code)
-            if code then p.awakenings[#p.awakenings + 1] = { round = round, code = code, name = awakeName[code], order = #p.awakenings } end
+            if code then p.awakenings[#p.awakenings + 1] = { round = round, code = code, name = awakeName[code], order = #p.awakenings, select_index = i } end
         end
         local got = false
         eachArray(m(e, "SelectedTrainings"), function(st) add(s(m(st, "TrainingId"))); got = true end)
@@ -279,7 +283,8 @@ local function formatReadable(rec)
             p.goals, p.assists, p.saves, p.knockouts, p.damage, p.redirects, p.shots, p.orbs,
             tostring(p.rank and p.rank.previous_tier), tostring(p.rank and p.rank.updated_tier)))
         for _, a in ipairs(p.awakenings) do
-            w(string.format("   awakening r%s: %s (%s)\n", tostring(a.round), tostring(a.name), tostring(a.code)))
+            w(string.format("   awakening r%s [sel_idx=%s]: %s (%s)\n",
+                tostring(a.round), tostring(a.select_index), tostring(a.name), tostring(a.code)))
         end
     end
     return table.concat(L)

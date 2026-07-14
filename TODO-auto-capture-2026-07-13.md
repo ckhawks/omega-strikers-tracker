@@ -30,6 +30,24 @@ VPS DB with dedup, account mapping, awakenings, MVP/goalie/rank, sets, mode, map
       in next@16 — a breaking 14→15→16 + React 18→19 migration. No RCE / 0 critical
       on 14.2.35. Do as its own effort, not on deploy day.
 
+## Draft order
+- [x] **Striker draft order** (2026-07-13). Mod sends raw `selections[]` (game's
+      `CharactersSelected` log — hovers have null `striker_code`, lock-ins don't).
+      Ingest reduces to per-player `strikerPickOrder` (last non-null pick per account,
+      ranked by `pick_index`) + `Match.firstPickTeam` (team of pick #1; draft is a
+      snake). Migration `003_striker_draft_order.sql` applied to prod. Match page shows
+      a **Pick** column + **Draft → First pick: Team N**. NOTE: reduction rule verified
+      only on a **2-player** draft — sanity-check the first **3v3** capture's Pick order.
+- [ ] **Awakening draft order** (per set) — deferred. Mod already captures
+      `select_index` per awakening (position in the `TrainingsSelected` log). Still need
+      a real multi-set dump to confirm how `Round` + `select_index` segment: `Round` is
+      **not** the set index (a 2-set match showed all awakenings tagged `r4`, so `Round`
+      is a goal/phase counter). Plan once confirmed: add `selectIndex` column to
+      `MatchPlayerAwakening`, derive per-set pick order, surface on match page.
+- Bans are captured (resolved team slots `team1BanStriker`/`team2BanStriker`). Ban
+  *order*/attribution is available via `BannedCharactersData.BannedCharacterVotes[]`
+  (PlayerState + banned char per vote) but intentionally **not** captured — not wanted.
+
 ## Polish / deferred
 - [x] **Sound cue on upload.** Done — plays a random ability SFX via
       `PostEventByName` after upload (`sfx_cha_generic_evade` /
@@ -46,6 +64,7 @@ VPS DB with dedup, account mapping, awakenings, MVP/goalie/rank, sets, mode, map
 - [x] **Merge `auto-capture-integration` → main** (2026-07-13).
 
 ## Reference
-- Mod (not in repo): `…/OmegaStrikers/Binaries/Win64/Mods/OSCapture/Scripts/main.lua`
+- Mod: vendored at `mod/OSCapture/Scripts/main.lua` (game folder is a junction to it).
+  How to extend: `docs/MOD-DEVELOPMENT.md`.
 - VPS Postgres: see `CLAUDE.md` (host/port, docker `postgres:16` for psql).
 - Full design + findings: assistant memory `auto-capture-approach.md`.

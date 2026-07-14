@@ -43,6 +43,7 @@ export default async function MatchDetails({
         mp."updatedTier",
         mp."previousTier",
         mp."ratingChange",
+        mp."strikerPickOrder",
         p."name",
         m."map",
         m."mode",
@@ -51,6 +52,7 @@ export default async function MatchDetails({
         m."team2Score",
         m."team1BanStriker",
         m."team2BanStriker",
+        m."firstPickTeam",
         m."createdAt",
         m."duration"
     FROM "MatchPlayer" mp
@@ -199,6 +201,13 @@ ORDER BY mp."teamNumber";
               <div>Team 2: {match.team2BanStriker || "—"}</div>
             </div>
           )}
+
+          {match.firstPickTeam && (
+            <div>
+              <strong>Draft</strong>
+              <div>First pick: Team {match.firstPickTeam}</div>
+            </div>
+          )}
         </div>
 
         {/* Balance details (legacy manual ranks only) */}
@@ -244,6 +253,7 @@ ORDER BY mp."teamNumber";
           <thead>
             <tr>
               <th>Team</th>
+              <th>Pick</th>
               <th>Player</th>
               <th>Striker</th>
               <th>Role</th>
@@ -267,6 +277,9 @@ ORDER BY mp."teamNumber";
                 <>
                   <tr key={index}>
                     <td>{player.teamNumber}</td>
+                    <td>
+                      {player.strikerPickOrder ? `#${player.strikerPickOrder}` : "—"}
+                    </td>
                     <td>
                       {player.name || player.username || "Anonymous"}
                       {player.isMvp && (
@@ -321,7 +334,7 @@ ORDER BY mp."teamNumber";
                   {awakenings.length > 0 && (
                     <tr key={`${index}-awak`}>
                       <td></td>
-                      <td colSpan={13} style={{ fontSize: "0.85em", color: "#888" }}>
+                      <td colSpan={14} style={{ fontSize: "0.85em", color: "#888" }}>
                         <strong style={{ marginRight: 8 }}>Awakenings:</strong>
                         <span
                           style={{
